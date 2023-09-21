@@ -66,6 +66,9 @@ clone_project() {
                     error_exit "git clone命令执行失败。请修正后，重新运行。"
                 fi
                 echo "尝试安装$clone_project依赖..."
+		if [ "$clone_project" = "deepin-kwin" ]; then
+                    clone_project="kwin"
+                fi
                 sudo apt build-dep "$clone_project"
                 break  # 退出循环
                 ;;
