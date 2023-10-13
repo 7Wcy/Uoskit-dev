@@ -35,7 +35,6 @@ show_help() {
     echo ""
 }
 
-
 # 错误退出函数
 error_exit() {
     echo "错误：$1" >&2
@@ -44,17 +43,20 @@ error_exit() {
 
 # 安装软件函数
 install_software() {
-    sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server
+    sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts
 }
 
 # 克隆项目函数
 clone_project() {
     local clone_project
+    local build_project
     echo "要克隆哪个项目？(kwin/kwayland/xorg/dde-session-shell)"
     echo "（确保源和软件包已经安装）"
     
     while true; do
         read clone_project
+	build_project=$clone_project
+
         case "$clone_project" in
             "kwin"|"kwayland"|"xorg"|"dde-session-shell")
                 if [ "$clone_project" = "kwin" ]; then
@@ -62,14 +64,17 @@ clone_project() {
                 fi
 
                 git clone "http://gerrit.uniontech.com/$clone_project" && (cd "$clone_project" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg http://gerrit.uniontech.com/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
-                if [ $? -ne 0 ]; then
+                
+		if [ $? -ne 0 ]; then
                     error_exit "git clone命令执行失败。请修正后，重新运行。"
                 fi
-                echo "尝试安装$clone_project依赖..."
-		if [ "$clone_project" = "deepin-kwin" ]; then
-                    clone_project="kwin"
+ 		echo ""
+                echo "尝试安装$build_project依赖..."
+		echo ""
+		if [ "$build_clone" = "deepin-kwin" ]; then
+                    build_project="kwin"
                 fi
-                sudo apt build-dep "$clone_project"
+                sudo apt build-dep "$build_project"
                 break  # 退出循环
                 ;;
             *)
@@ -348,6 +353,7 @@ case "$operation" in
                 ;;
             "yes"|"y")
                 sudo vim /etc/apt/sources.list
+		sudo apt update
                 ;;
         esac
         ;;
@@ -383,7 +389,3 @@ case "$operation" in
 esac
 
 exit 0
-
-
-
-
