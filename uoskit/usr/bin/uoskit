@@ -12,25 +12,20 @@ DEL_MATCH='*-dev* *-dbgsym* *-doc*'
 
 # 帮助函数
 show_help() {
+    echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a]"
+    echo ""
     echo "用法：$0 [选项]..."
     echo "选项说明:"
-    echo "  -h, --help      显示帮助信息"
-    echo ""
-    echo "  -m, make        编译安装源码"
-    echo ""
-    echo "  -mc cmake       只进行debug编译，不安装"
-    echo ""
-    echo "  -s, software    安装开发人员需要的软件包"
-    echo ""
-    echo "  -c, clone       克隆项目"
-    echo "" 
-    echo "  -l, list        添加源"
-    echo ""
-    echo "  -d, dpkg        进行出包"
-    echo ""
-    echo "  -p, package     下载指定包或全量包"
-    echo ""
-    echo "  -a, activation  进行激活操作"
+    echo "  -h       显示帮助信息"
+    echo "  -m       编译安装源码"
+    echo "  -mc      只进行 debug 编译，不安装"
+    echo "  -s       安装开发人员需要的软件包"
+    echo "  -c       克隆项目"
+    echo "  -l       添加源"
+    echo "  -e       导出此系统的全量日志"
+    echo "  -d       进行出包"
+    echo "  -p       下载指定包或全量包"
+    echo "  -a       进行激活操作"
     echo "  ..."
     echo ""
 }
@@ -52,10 +47,10 @@ clone_project() {
     local build_project
     echo "要克隆哪个项目？(kwin/kwayland/xorg/dde-session-shell)"
     echo "（确保源和软件包已经安装）"
-    
+
     while true; do
         read clone_project
-	build_project=$clone_project
+        build_project=$clone_project
 
         case "$clone_project" in
             "kwin"|"kwayland"|"xorg"|"dde-session-shell")
@@ -64,17 +59,22 @@ clone_project() {
                 fi
 
                 git clone "http://gerrit.uniontech.com/$clone_project" && (cd "$clone_project" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg http://gerrit.uniontech.com/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
-                
-		if [ $? -ne 0 ]; then
-                    error_exit "git clone命令执行失败。请修正后，重新运行。"
+
+                if [ $? -ne 0 ]; then
+                    error_exit "git clone失败，请查看网络或者权限是否有问题，请修正后，重新运行。"
                 fi
- 		echo ""
+                echo ""
                 echo "尝试安装$build_project依赖..."
-		echo ""
-		if [ "$build_clone" = "deepin-kwin" ]; then
+                echo ""
+                if [ "$build_clone" = "deepin-kwin" ]; then
                     build_project="kwin"
                 fi
                 sudo apt build-dep "$build_project"
+                
+		if [ $? -ne 0 ]; then
+                    error_exit "安装依赖失败，请查看依赖名称或者源是否有有错误，请修正后，重新运行。"
+                fi
+
                 break  # 退出循环
                 ;;
             *)
@@ -84,12 +84,58 @@ clone_project() {
     done
 }
 
+# 导出全量日志函数
+export_logs(){
+	cd ~/Desktop && mkdir export_logs && cd export_logs
+	sudo apt-get install systemd-coredump -y
+	if [ $? -ne 0 ]; then
+	     echo " "
+             error_exit "安装systemd-coredump失败。"
+	     exit 1
+        fi
+	mkdir logs -v
+	mkdir coredumps -v
+	sudo journalctl -b -0 > logs/journal-b0.log
+	sudo journalctl -b -1 > logs/journal-b-1.log
+	sudo coredumpctl list > logs/coredumpctl.log
+	sudo dmesg -T > logs/dmesg.log
+	## 导出客户环境包版本列表
+	dpkg -l > logs/dpkg-list.log
+	sudo journalctl -b /usr/bin/startdde > logs/journal-startdde.log
+	sudo journalctl -b /usr/lib/deepin-daemon/dde-session-daemon > logs/journal-dde-session-daemon.log
+	sudo journalctl -b 0 -u wpa_supplicant > logs/journal-wpa-supplicant.log
+	sudo journalctl -b 0 -u NetworkManager > logs/journal-NetworkManager.log
+	sudo cp -vr --parents /var/lib/systemd/coredump coredumps/
+	cp -vr --parents $HOME/deepin-recovery-gui.log logs/
+	cp -vr --parents $HOME/.kwin* logs/
+	cp -vr --parents $HOME/.cache/deepin logs/
+	cp -vr --parents $HOME/.cache/uos logs/
+	## 应华为要求deepin-deepinid-client有用户信息，不能导出
+	rm -rf logs$HOME/.cache/deepin/deepin-deepinid-client/
+	journalctl --user-unit pulseaudio.service > logs/pulse.log
+	## 有些客户环境lastlog几十个G，删除lastlog
+	sudo rm -rf /var/log/lastlog
+	## 导出var/log全量日志
+	sudo cp -vr --parents /var/log/ logs/
+	ps -aux > logs/ps-list.info
+	top -n 1 > logs/top.info
+	sudo chown -R $username:$username logs/ coredumps/
+	tar czvf logsall.tar.gz logs/ coredumps/
+	#calculate the size of logs
+	echo "日志容量大小统计："
+	du -h logsall.tar.gz
+	du -h -d1 ./
+	echo " "
+	echo "全量日志已完成。具体请查看:~/Desktop/export_logs"
+	exit 0
+}
 
 # 出包函数
 build_package() {
     # 检查当前文件夹是否包含名为 "debian" 的文件夹
     if [ ! -d "debian" ]; then
         error_exit "当前不是源码文件夹！"
+	exit 1
     fi
 
     # 进入debian目录并打开control文件，查看Source字段
@@ -116,9 +162,15 @@ build_package() {
     esac
 
     # 执行出包操作
+    if [ ! -d "build" ]; then
+       mkdir -p build
+    fi
+
     cd build
     sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-    sudo dpkg-buildpackage -us -uc -ui -b -j8
+    cd ..
+    sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8
+    exit 0
 }
 
 # 下载指定包或全量包
@@ -162,57 +214,12 @@ download_packages() {
     ls $DEL_MATCH | xargs rm -rf
     cd ..
     tar -cvzf deb-install.tar.gz "$DIR_INSTALL"
-}
-
-# M900软件源
-function add_m900_sources() {
-    sudo sed -i '/^deb.*pools.uniontech.com.*eagle.*main contrib non-free$/d' /etc/apt/sources.list
-    sudo sed -i '/^deb.*dz.uniontech.com.*m900-ppa.*eagle.*main non-free$/d' /etc/apt/sources.list
-    sudo sed -i '/^#新增M900内网测试仓库$/d' /etc/apt/sources.list
-    sudo sed -i '/^deb.*dz.uniontech.com.*pgw-M900-ppa.*eagle.*main non-free$/d' /etc/apt/sources.list
-    sudo sed -i '/^deb.*pools.uniontech.com.*dde-eagle.*eagle\/1055.*main contrib non-free$/d' /etc/apt/sources.list
-    sudo sed -i '/^deb.*aptly.uniontech.com.*eagle-1055.*release-candidate.*I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA.*unstable main$/d' /etc/apt/sources.list
-    sudo sed -i '/^deb.*aptly.uniontech.com.*eagle-1055.*release-candidate.*44CQ5a6J6KOF5Zmo44CR5LiT5Lia54mIMTA1NeesrOS4iei9ruaPkOa1i18yMDIzMDQyNDIwMjMtMDQtMjQgMTA6MDY6MDA.*unstable main$/d' /etc/apt/sources.list
-    sudo sed -i '/^#新增M900内网测试仓库$/d' /etc/apt/sources.list
-    echo "deb http://pools.uniontech.com/desktop-professional eagle main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb [trusted=yes] http://dz.uniontech.com/klu/m900-ppa eagle main non-free" | sudo tee -a /etc/apt/sources.list
-    echo "#新增M900内网测试仓库" | sudo tee -a /etc/apt/sources.list
-    echo "deb [trusted=yes] http://dz.uniontech.com/klu/pgw-M900-ppa eagle main non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://pools.uniontech.com/ppa/dde-eagle eagle/1055 main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA/ unstable main" | sudo tee -a /etc/apt/sources.list
-    echo "deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/44CQ5a6J6KOF5Zmo44CR5LiT5Lia54mIMTA1NeesrOS4iei9ruaPkOa1i18yMDIzMDQyNDIwMjMtMDQtMjQgMTA6MDY6MDA/ unstable main" | sudo tee -a /etc/apt/sources.list
-    echo "#新增M900内网测试仓库" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src [trusted=yes] http://dz.uniontech.com/klu/pgw-M900-ppa eagle main non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src http://pools.uniontech.com/ppa/dde-eagle eagle/1055 main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA/ unstable main" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/44CQ5a6J6KOF5Zmo44CR5LiT5Lia54mIMTA1NeesrOS4iei9ruaPkOa1i18yMDIzMDQyNDIwMjMtMDQtMjQgMTA6MDY6MDA/ unstable main" | sudo tee -a /etc/apt/sources.list
-}
-
-
-# 1050软件源
-function add_1050_sources(){
-    echo "deb https://professional-packages.chinauos.com/desktop-professional eagle main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb https://professional-ppa.chinauos.com/wayland-ppa eagle/klu main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://pools.uniontech.com/desktop-professional eagle main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src http://pools.uniontech.com/desktop-professional eagle main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://pools.uniontech.com/ppa/dde-eagle eagle/1051 main contrib non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src http://pools.uniontech.com/ppa/dde-eagle eagle/1051 main contrib non-free" | sudo tee -a /etc/apt/sources.list
-}
-
-# 1042软件源
-function add_1042_sources() {
-    echo "deb [trusted=yes] http://10.20.15.133/klu/klu-ppa/ unstable main non-free" | sudo tee -a /etc/apt/sources.list
-    echo "deb [trusted=yes] https://aptly.uniontech.com/pkg/eagle-pgv-klu-1022/release-candidate/MTA0MnU1MjAyMy0wNS0xMSAwOTo1MzowOQ/ unstable main" | sudo tee -a /etc/apt/sources.list
-    echo "deb-src [trusted=yes] https://aptly.uniontech.com/pkg/eagle-pgv-klu-1022/release-candidate/MTA0MnU1MjAyMy0wNS0xMSAwOTo1MzowOQ/ unstable main" | sudo tee -a /etc/apt/sources.list
-
-    echo "deb [trusted=yes] http://dz.uniontech.com/aptly/wayland-master unstable main non-free" | sudo tee /etc/apt/sources.list.d/klu-ppa.list
-    echo "deb-src [trusted=yes] http://dz.uniontech.com/aptly/wayland-master unstable main non-free" | sudo tee -a /etc/apt/sources.list.d/klu-ppa.list
+    exit 0
 }
 
 #检查源配置是否正确函数
-function check_sources(){
-
- echo "源已配置完成，是否更新？(yes/no)"
+function check_sources() {
+    echo "源已配置完成，是否更新？(yes/no)"
     read answer
     while [ "$answer" != "yes" ] && [ "$answer" != "no" ] && [ "$answer" != "y" ] && [ "$answer" != "n" ]; do
         echo "请输入正确的选项：yes 或 no (y/n)"
@@ -220,7 +227,7 @@ function check_sources(){
     done
 
     if [ "$answer" = "yes" ] || [ "$answer" = "y" ]; then
-            sudo apt update
+        sudo apt update
     else
         echo "脚本结束。"
         exit 0
@@ -256,12 +263,15 @@ while [ "$#" -gt 0 ]; do
         "dpkg" | "-d")
             operation="dpkg"
             ;;
-	"package" | "-p")
-	    operation="package"
-	    ;;
-	"activation" | "-a")
-	    operation="activation"
-	    ;;
+        "package" | "-p")
+            operation="package"
+            ;;
+        "activation" | "-a")
+            operation="activation"
+            ;;
+        "export" | "-e")
+            operation="export"
+            ;;
         *)
             show_help
             exit 1
@@ -274,6 +284,7 @@ case "$operation" in
     "make")
         if [ ! -d "debian" ]; then
             error_exit "当前不是源码文件夹！"
+	    exit 1
         fi
 
         if [ ! -d "build" ]; then
@@ -335,57 +346,65 @@ case "$operation" in
         case "$vim_sources" in
             "M900")
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "echo '' > /etc/apt/sources.list.d/klu-ppa.list"
-                add_m900_sources
+                sudo sh -c "cat /usr/bin/uoskit_M900_list.txt >> /etc/apt/sources.list"
                 check_sources
                 ;;
             "1042")
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "echo '' > /etc/apt/sources.list.d/klu-ppa.list"
-                add_1042_sources
-                check_sources
+                echo "还未推出"
+                exit 0
+                #sudo sh -c "echo '' > /etc/apt/sources.list"
+                #sudo sh -c "cat ~/usr/bin/uoskit_1042_list.txt" >> /etc/apt/sources.list
+                #check_sources
                 ;;
             "1050")
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "echo '' > /etc/apt/sources.list.d/klu-ppa.list"
-                add_1050_sources
-                check_sources
+                echo "还未推出"
+                exit 0
+                #sudo sh -c "echo '' > /etc/apt/sources.list"
+                #sudo sh -c "cat ~/usr/bin/uoskit_1042_list.txt" >> /etc/apt/sources.list
+                #check_sources
                 ;;
             "yes"|"y")
                 sudo vim /etc/apt/sources.list
-		sudo apt update
+                sudo apt update
                 ;;
         esac
         ;;
-    "dpkg")
-        if [ ! -d "debian" ]; then
-            error_exit "当前不是源码文件夹！"
-        fi
-
-        build_package
-        ;;
-    "package")
-        download_packages
-        ;;
-    "activation")
-        echo "将进行kms激活，是否进行激活尝试（有可能退出当前激活:yes/no）"
-        read activation_method
-	while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
-            echo "请输入正确的选项：yes 或 no (y/n)"
-            read activation_method
-        done
-
-        if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
-            uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
-	    echo "已进行kms激活，请验证。"
-	else
-		exit 0
-        fi
+    "export")
+       export_logs
 	;;
-    *)
-        show_help
-        exit 1
-        ;;
-esac
 
+    "dpkg")
+	build_package
+	;;
+	
+    "package")
+	download_packages
+	;;
+	
+    "activation")
+	echo "将进行kms激活，是否进行激活尝试（有可能退出当前激活:yes/no）"
+	read activation_method
+	while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
+	   echo "请输入正确的选项：yes 或 no (y/n)"
+           read activation_method
+	done
+	
+	if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
+	   uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
+	   echo "已进行kms激活，请验证。"
+	else
+	   exit 0
+	fi
+	;;
+	
+	*)
+	show_help
+	exit 1
+	;;
+
+esac
+	
 exit 0
+
+ 
+

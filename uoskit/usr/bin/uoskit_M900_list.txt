@@ -1,0 +1,25 @@
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1055 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/desktop-professional eagle/1055 main contrib non-free
+deb [trusted=yes] http://10.2.10.31/repo/uos-sw64-base/ eagle main contrib non-free
+deb [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-ghc/ eagle main
+deb [trusted=yes] http://sh-internal.deepin.com/repo/v20/uos-sw64-addon eagle main
+deb [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-go/ eagle main
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release/ unstable main 
+deb [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1055/release unstable non-free
+deb [trusted=yes] http://10.2.10.31/repo/v20/desktop-professional/dde-1053 eagle/sp5 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw eagle/1060 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable main
+deb [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable non-free
+
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1055 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/desktop-professional eagle/1055 main contrib non-free
+deb-src [trusted=yes] http://10.2.10.31/repo/uos-sw64-base/ eagle main contrib non-free
+deb-src [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-ghc/ eagle main
+deb-src [trusted=yes] http://sh-internal.deepin.com/repo/v20/uos-sw64-addon eagle main
+deb-src [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-go/ eagle main
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release/ unstable main 
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1055/release unstable non-free
+deb-src [trusted=yes] http://10.2.10.31/repo/v20/desktop-professional/dde-1053 eagle/sp5 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw eagle/1060 main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable main
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable non-free
