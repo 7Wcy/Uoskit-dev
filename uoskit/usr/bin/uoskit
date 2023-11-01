@@ -33,25 +33,25 @@ show_help() {
 # debug编译检查函数
 debug_check(){
     if [ ! -d "debian" ]; then
-          error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
-        fi
+      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+    fi
 
-        if [ ! -d "build" ]; then
-            mkdir -p build
-        fi
+    if [ ! -d "build" ]; then
+      mkdir -p build
+    fi
 
-        cd build
+    cd build
 
-        if [ "$only_Run_cmake" = "true" ]; then
-            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-            exit 0
-        else
-            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-            sudo make install -j8
-            [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
-        fi
+    if [ "$only_Run_cmake" = "true" ]; then
+        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+        exit 0
+    else
+        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+        sudo make install -j8
+        [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
+    fi
 }
 
 # 错误退出函数
@@ -156,7 +156,13 @@ export_logs() {
 # 出包函数
 build_package() {
 
-    debug_check
+    if [ ! -d "debian" ]; then
+      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+    fi
+
+    if [ ! -d "build" ]; then
+      mkdir -p build
+    fi
 
     # 进入debian目录并打开control文件，查看Source字段
     cd debian
