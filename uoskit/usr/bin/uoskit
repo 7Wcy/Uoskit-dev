@@ -361,8 +361,11 @@ case "$operation" in
 
         case "$vim_sources" in
             "M900")
+                echo "备份当前源："
+                cat /etc/apt/sources.list
                 sudo sh -c "echo '' > /etc/apt/sources.list"
                 sudo sh -c "cat /usr/bin/uoskit_M900_list.txt >> /etc/apt/sources.list"
+		echo ""
                 check_sources
                 ;;
             "1042")
@@ -415,7 +418,7 @@ case "$operation" in
 	
 	*)
 	show_help
-	error_exit
+	error_exit "请参考"
 	;;
 
 esac
