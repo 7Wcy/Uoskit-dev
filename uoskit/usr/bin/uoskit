@@ -67,42 +67,58 @@ install_software() {
 
 # 克隆项目函数
 clone_project() {
-    local clone_project
-    local build_project
-    echo "要克隆哪个项目？(kwin/kwayland/xorg/dde-session-shell)"
-    echo "（确保源和软件包已经安装）"
+    local clone_Project_name
+    local clone_Project_number
+    echo "要克隆哪个项目？(确保源和软件包已经安装)"
+    echo "1.deepin-kwin|2.kwayland|3.xorg-server|4.dde-session-shell"
 
     while true; do
-        read clone_project
-        build_project=$clone_project
+        read clone_Project_number
 
-        case "$clone_project" in
-            "kwin"|"kwayland"|"xorg"|"dde-session-shell")
-                if [ "$clone_project" = "kwin" ]; then
-                    clone_project="deepin-kwin"
+        case "$clone_Project_number" in
+            "1"|"2"|"3"|"4")
+                if [ "$clone_Project_number" = "1" ]; then
+                    clone_Project_name="deepin-kwin"
+
+                elif [ "$clone_Project_number" = "2" ]; then
+                    clone_Project_name="kwayland"
+			
+                elif [ "$clone_Project_number" = "3" ]; then
+                    clone_Project_name="base/xorg-server"    		  
+
+                elif [ "$clone_Project_number" = "4" ]; then
+                    clone_Project_name="dde-session-shell"
                 fi
 
-                git clone "http://gerrit.uniontech.com/$clone_project" && (cd "$clone_project" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg http://gerrit.uniontech.com/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
+                git clone "http://gerrit.uniontech.com/$clone_Project_name" 
+	       
+	         if [ "$clone_Project_number" = "3" ]; then
+		       clone_Project_name=xorg-server
+                fi
+               
+		   cd "$clone_Project_name" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg http://gerrit.uniontech.com/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg
 
                 if [ $? -ne 0 ]; then
                     error_exit "git clone失败，请查看网络或者权限是否有问题，请修正后，重新运行。"
                 fi
-                echo ""
-                echo "尝试安装$build_project依赖..."
-                echo ""
-                if [ "$build_clone" = "deepin-kwin" ]; then
-                    build_project="kwin"
-                fi
-                sudo apt build-dep "$build_project"
                 
-		if [ $? -ne 0 ]; then
-                    error_exit "安装依赖失败，请查看依赖名称或者源是否有有错误，请修正后，重新运行。"
+                cd $clone_Project_name
+                echo ""
+                echo ""
+                echo "尝试安装$clone_Project_name依赖..."
+                echo ""
+                echo ""
+
+                sudo apt build-dep ./
+                
+                if [ $? -ne 0 ]; then
+                    error_exit "安装依赖失败，源错误，请修正后，重新运行。"
                 fi
 
                 break  # 退出循环
                 ;;
             *)
-                echo "请输入正确的选项：kwin、kwayland、xorg、dde-session-shell"
+                echo "请输入正确的选项数字:1、2、3、4"
                 ;;
         esac
     done
@@ -115,7 +131,7 @@ export_logs() {
 	if [ $? -ne 0 ]; then
 	      echo " "
              error_exit "安装systemd-coredump失败。"
-        fi
+	fi
 	mkdir logs -v
 	mkdir coredumps -v
 	sudo journalctl -b -0 > logs/journal-b0.log
@@ -302,8 +318,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$operation" in
-    "make")
-	 
+    "make")	 
         debug_check
         echo "已完成安装，是否重启？(yes/no)"
         read answer
@@ -406,3 +421,4 @@ case "$operation" in
 esac
 	
 exit 0
+
