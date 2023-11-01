@@ -30,6 +30,30 @@ show_help() {
     echo ""
 }
 
+# debug编译检查函数
+debug_check(){
+    if [ ! -d "debian" ]; then
+          error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+        fi
+
+        if [ ! -d "build" ]; then
+            mkdir -p build
+        fi
+
+        cd build
+
+        if [ "$only_Run_cmake" = "true" ]; then
+            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+            exit 0
+        else
+            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+            sudo make install -j8
+            [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
+        fi
+}
+
 # 错误退出函数
 error_exit() {
     echo "错误：$1" >&2
@@ -38,7 +62,7 @@ error_exit() {
 
 # 安装软件函数
 install_software() {
-    sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts
+    sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts -y
 }
 
 # 克隆项目函数
@@ -85,13 +109,12 @@ clone_project() {
 }
 
 # 导出全量日志函数
-export_logs(){
+export_logs() {
 	cd ~/Desktop && mkdir export_logs && cd export_logs
 	sudo apt-get install systemd-coredump -y
 	if [ $? -ne 0 ]; then
-	     echo " "
+	      echo " "
              error_exit "安装systemd-coredump失败。"
-	     exit 1
         fi
 	mkdir logs -v
 	mkdir coredumps -v
@@ -132,15 +155,13 @@ export_logs(){
 
 # 出包函数
 build_package() {
-    # 检查当前文件夹是否包含名为 "debian" 的文件夹
-    if [ ! -d "debian" ]; then
-        error_exit "当前不是源码文件夹！"
-	exit 1
-    fi
+
+    debug_check
 
     # 进入debian目录并打开control文件，查看Source字段
     cd debian
     source_name=$(grep -E "^Source:" control | awk '{print $2}')
+    cd ..
 
     # 根据Source字段进行不同操作
     case "$source_name" in
@@ -161,11 +182,6 @@ build_package() {
             ;;
     esac
 
-    # 执行出包操作
-    if [ ! -d "build" ]; then
-       mkdir -p build
-    fi
-
     cd build
     sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
     cd ..
@@ -183,8 +199,7 @@ download_packages() {
     read PKG_INPUT
     PKGNAMES=($PKG_INPUT)
     if [ -z "$ORIGIN" ] || [ -z "${PKGNAMES[*]}" ]; then
-        echo "仓库原地址或者包名为空"
-        exit 1
+        error_exit "仓库地址或者包名为空"
     fi
 
     if [ ! -d "$DIR_LOCAL" ]; then
@@ -274,7 +289,7 @@ while [ "$#" -gt 0 ]; do
             ;;
         *)
             show_help
-            exit 1
+            error_exit
             ;;
     esac
     shift
@@ -282,28 +297,8 @@ done
 
 case "$operation" in
     "make")
-        if [ ! -d "debian" ]; then
-            error_exit "当前不是源码文件夹！"
-	    exit 1
-        fi
-
-        if [ ! -d "build" ]; then
-            mkdir -p build
-        fi
-
-        cd build
-
-        if [ "$only_Run_cmake" = "true" ]; then
-            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-            exit 0
-        else
-            sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-            [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-            sudo make install -j8
-            [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
-        fi
-
+	 
+        debug_check
         echo "已完成安装，是否重启？(yes/no)"
         read answer
         while [[ ! $answer =~ ^(yes|no|y|n)$ ]]; do
@@ -399,12 +394,9 @@ case "$operation" in
 	
 	*)
 	show_help
-	exit 1
+	error_exit
 	;;
 
 esac
 	
 exit 0
-
- 
-
