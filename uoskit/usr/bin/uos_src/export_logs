@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# 错误退出函数
+error_exit() {
+    echo "错误：$1" >&2
+    exit 1
+}
+
+# 创建导出日志目录
+export_dir=~/Desktop/export_logs
+mkdir -p "$export_dir/logs"
+mkdir -p "$export_dir/coredumps"
+
+echo "安装 systemd-coredump ..."
+sudo apt-get install systemd-coredump -y
+if [ $? -ne 0 ]; then
+    echo "安装 systemd-coredump 失败。"
+    error_exit "安装 systemd-coredump 失败。"
+fi
+
+# 导出各类日志
+sudo journalctl -b -0 > "$export_dir/logs/journal-b0.log"
+sudo journalctl -b -1 > "$export_dir/logs/journal-b-1.log"
+sudo coredumpctl list > "$export_dir/logs/coredumpctl.log"
+sudo dmesg -T > "$export_dir/logs/dmesg.log"
+dpkg -l > "$export_dir/logs/dpkg-list.log"
+sudo journalctl -b /usr/bin/startdde > "$export_dir/logs/journal-startdde.log"
+sudo journalctl -b /usr/lib/deepin-daemon/dde-session-daemon > "$export_dir/logs/journal-dde-session-daemon.log"
+sudo journalctl -b 0 -u wpa_supplicant > "$export_dir/logs/journal-wpa-supplicant.log"
+sudo journalctl -b 0 -u NetworkManager > "$export_dir/logs/journal-NetworkManager.log"
+
+# 复制相关文件到导出目录
+sudo cp -vr --parents /var/lib/systemd/coredump "$export_dir/coredumps/"
+cp -vr --parents "$HOME/deepin-recovery-gui.log" "$export_dir/logs/"
+cp -vr --parents "$HOME/.kwin*" "$export_dir/logs/"
+cp -vr --parents "$HOME/.cache/deepin" "$export_dir/logs/"
+cp -vr --parents "$HOME/.cache/uos" "$export_dir/logs/"
+
+# 删除敏感信息
+rm -rf "$export_dir/logs$HOME/.cache/deepin/deepin-deepinid-client/"
+
+# 导出用户服务单元日志
+journalctl --user-unit pulseaudio.service > "$export_dir/logs/pulse.log"
+
+# 删除巨大的 lastlog 文件
+sudo rm -rf /var/log/lastlog
+
+# 导出/var/log全量日志
+sudo cp -vr --parents /var/log/ "$export_dir/logs/"
+ps -aux > "$export_dir/logs/ps-list.info"
+top -n 1 > "$export_dir/logs/top.info"
+
+# 更改日志文件的所有者
+sudo chown -R "$USER:$USER" "$export_dir/logs/" "$export_dir/coredumps/"
+
+# 打包日志
+tar czvf "$export_dir/logsall.tar.gz" -C "$export_dir" logs/ coredumps/
+
+# 计算日志大小
+echo "日志容量大小统计："
+du -h "$export_dir/logsall.tar.gz"
+du -h -d1 "$export_dir"
+
+echo " "
+echo "全量日志已完成。具体请查看: $export_dir"
+exit 0
+

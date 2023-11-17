@@ -1,18 +1,8 @@
 #!/bin/bash
 
-# 设置全局变量
-ORIGIN=""
-PKGNAMES=()
-BASE_PATH=pool/main
-WGET=wget
-OPTIONS='--mirror -r -np -R "*index.html*" -nd -e robots=off'
-DIR_LOCAL="debs-all"
-DIR_INSTALL="debs-install"
-DEL_MATCH='*-dev* *-dbgsym* *-doc*'
-
 # 帮助函数
 show_help() {
-    echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a]"
+    echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
     echo ""
     echo "用法：$0 [选项]..."
     echo "选项说明:"
@@ -26,8 +16,15 @@ show_help() {
     echo "  -d       进行出包"
     echo "  -p       下载指定包或全量包"
     echo "  -a       进行激活操作"
+    echo "  -ssh     配置ssh公钥信息"
     echo "  ..."
     echo ""
+}
+
+# 错误退出函数
+error_exit() {
+    echo "$1" >&2
+    exit 1
 }
 
 # debug编译检查函数
@@ -54,204 +51,9 @@ debug_check(){
     fi
 }
 
-# 错误退出函数
-error_exit() {
-    echo "错误：$1" >&2
-    exit 1
-}
-
 # 安装软件函数
 install_software() {
     sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts -y
-}
-
-# 克隆项目函数
-clone_project() {
-    local clone_Project_name
-    local clone_Project_number
-    echo "要克隆哪个项目？(确保源和软件包已经安装)"
-    echo "1.deepin-kwin|2.kwayland|3.xorg-server|4.dde-session-shell"
-
-    while true; do
-        read clone_Project_number
-
-        case "$clone_Project_number" in
-            "1"|"2"|"3"|"4")
-                if [ "$clone_Project_number" = "1" ]; then
-                    clone_Project_name="deepin-kwin"
-
-                elif [ "$clone_Project_number" = "2" ]; then
-                    clone_Project_name="kwayland"
-			
-                elif [ "$clone_Project_number" = "3" ]; then
-                    clone_Project_name="base/xorg-server"    		  
-
-                elif [ "$clone_Project_number" = "4" ]; then
-                    clone_Project_name="dde-session-shell"
-                fi
-
-                git clone "http://gerrit.uniontech.com/$clone_Project_name" 
-	       
-	         if [ "$clone_Project_number" = "3" ]; then
-		       clone_Project_name=xorg-server
-                fi
-               
-		   cd "$clone_Project_name" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg http://gerrit.uniontech.com/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg
-
-                if [ $? -ne 0 ]; then
-                    error_exit "git clone失败，请查看网络或者权限是否有问题，请修正后，重新运行。"
-                fi
-                
-                cd $clone_Project_name
-                echo ""
-                echo ""
-                echo "尝试安装$clone_Project_name依赖..."
-                echo ""
-                echo ""
-
-                sudo apt build-dep ./
-                
-                if [ $? -ne 0 ]; then
-                    error_exit "安装依赖失败，源错误，请修正后，重新运行。"
-                fi
-
-                break  # 退出循环
-                ;;
-            *)
-                echo "请输入正确的选项数字:1、2、3、4"
-                ;;
-        esac
-    done
-}
-
-# 导出全量日志函数
-export_logs() {
-	cd ~/Desktop && mkdir export_logs && cd export_logs
-	sudo apt-get install systemd-coredump -y
-	if [ $? -ne 0 ]; then
-	      echo " "
-             error_exit "安装systemd-coredump失败。"
-	fi
-	mkdir logs -v
-	mkdir coredumps -v
-	sudo journalctl -b -0 > logs/journal-b0.log
-	sudo journalctl -b -1 > logs/journal-b-1.log
-	sudo coredumpctl list > logs/coredumpctl.log
-	sudo dmesg -T > logs/dmesg.log
-	## 导出客户环境包版本列表
-	dpkg -l > logs/dpkg-list.log
-	sudo journalctl -b /usr/bin/startdde > logs/journal-startdde.log
-	sudo journalctl -b /usr/lib/deepin-daemon/dde-session-daemon > logs/journal-dde-session-daemon.log
-	sudo journalctl -b 0 -u wpa_supplicant > logs/journal-wpa-supplicant.log
-	sudo journalctl -b 0 -u NetworkManager > logs/journal-NetworkManager.log
-	sudo cp -vr --parents /var/lib/systemd/coredump coredumps/
-	cp -vr --parents $HOME/deepin-recovery-gui.log logs/
-	cp -vr --parents $HOME/.kwin* logs/
-	cp -vr --parents $HOME/.cache/deepin logs/
-	cp -vr --parents $HOME/.cache/uos logs/
-	## 应华为要求deepin-deepinid-client有用户信息，不能导出
-	rm -rf logs$HOME/.cache/deepin/deepin-deepinid-client/
-	journalctl --user-unit pulseaudio.service > logs/pulse.log
-	## 有些客户环境lastlog几十个G，删除lastlog
-	sudo rm -rf /var/log/lastlog
-	## 导出var/log全量日志
-	sudo cp -vr --parents /var/log/ logs/
-	ps -aux > logs/ps-list.info
-	top -n 1 > logs/top.info
-	sudo chown -R $username:$username logs/ coredumps/
-	tar czvf logsall.tar.gz logs/ coredumps/
-	#calculate the size of logs
-	echo "日志容量大小统计："
-	du -h logsall.tar.gz
-	du -h -d1 ./
-	echo " "
-	echo "全量日志已完成。具体请查看:~/Desktop/export_logs"
-	exit 0
-}
-
-# 出包函数
-build_package() {
-
-    if [ ! -d "debian" ]; then
-      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
-    fi
-
-    if [ ! -d "build" ]; then
-      mkdir -p build
-    fi
-
-    # 进入debian目录并打开control文件，查看Source字段
-    cd debian
-    source_name=$(grep -E "^Source:" control | awk '{print $2}')
-    cd ..
-
-    # 根据Source字段进行不同操作
-    case "$source_name" in
-        "kwin"|"xorg-server")
-            # 检查rules文件末尾是否有override_dh_shlibdeps
-            if ! grep -q "override_dh_shlibdeps" rules; then
-                echo -e "override_dh_shlibdeps:\n\t\tdh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info" >> rules
-            fi
-            ;;
-        "kwayland")
-            # 切换回源码目录
-            cd ..
-            # 注释 if (BUILD_TESTING) 到 endif() 之间的内容
-            sed -i '/if (BUILD_TESTING)/, /endif()/ s/^/#/' CMakeLists.txt
-            ;;
-        *)
-            error_exit "Source字段不符合预期：$source_name"
-            ;;
-    esac
-
-    cd build
-    sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-    cd ..
-    sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8
-    exit 0
-}
-
-# 下载指定包或全量包
-download_packages() {
-    echo "请输入仓库源地址（ORIGIN）:"
-    read ORIGIN_INPUT
-    ORIGIN="$ORIGIN_INPUT"
-
-    echo "请输入要下载的包名，用空格分隔（例如：kwin kwayland）:"
-    read PKG_INPUT
-    PKGNAMES=($PKG_INPUT)
-    if [ -z "$ORIGIN" ] || [ -z "${PKGNAMES[*]}" ]; then
-        error_exit "仓库地址或者包名为空"
-    fi
-
-    if [ ! -d "$DIR_LOCAL" ]; then
-        mkdir "$DIR_LOCAL" -v
-    fi
-
-    if [ ! -d "$DIR_INSTALL" ]; then
-        mkdir "$DIR_INSTALL" -v
-    fi
-
-    cd "$DIR_LOCAL"
-    if [ ! "${PKGNAMES[*]}" ]; then
-        $WGET $OPTIONS "$ORIGIN/"
-    else
-        for pkg in "${PKGNAMES[@]}"; do
-            if [ "${pkg:0:3}" = "lib" ]; then
-                pkg_path="$BASE_PATH/${pkg:0:4}/$pkg/"
-            else
-                pkg_path="$BASE_PATH/${pkg:0:1}/$pkg/"
-            fi
-            $WGET $OPTIONS "$ORIGIN/$pkg_path"
-        done
-    fi
-
-    cp *.deb "../$DIR_INSTALL"
-    cd "../$DIR_INSTALL"
-    ls $DEL_MATCH | xargs rm -rf
-    cd ..
-    tar -cvzf deb-install.tar.gz "$DIR_INSTALL"
-    exit 0
 }
 
 #检查源配置是否正确函数
@@ -291,27 +93,30 @@ while [ "$#" -gt 0 ]; do
         "software" | "-s")
             operation="software"
             ;;
-        "clone" | "-c")
-            operation="clone"
-            ;;
         "list" | "-l")
             operation="list"
-            ;;
-        "dpkg" | "-d")
-            operation="dpkg"
-            ;;
-        "package" | "-p")
-            operation="package"
             ;;
         "activation" | "-a")
             operation="activation"
             ;;
-        "export" | "-e")
+        "clone" | "-c") #在uos_src中
+            operation="clone"
+            ;;
+        "dpkg" | "-d") #在uos_src中
+            operation="dpkg"
+            ;;
+        "package" | "-p") #在uos_src中
+            operation="package"
+            ;;
+        "export" | "-e") #在uos_src中
             operation="export"
+            ;;
+        "-ssh") #在uos_src中
+            operation="ssh"
             ;;
         *)
             show_help
-            error_exit
+            error_exit "请参考"
             ;;
     esac
     shift
@@ -349,7 +154,8 @@ case "$operation" in
         fi
         ;;
     "clone")
-        clone_project
+        cd /usr/bin/uos_src
+        bash ./clone_project
         ;;
     "list")
         echo "当前机型选择1042、1050、M900(手动更改yes/y?)"
@@ -389,19 +195,23 @@ case "$operation" in
         esac
         ;;
     "export")
-       export_logs
+       cd /usr/bin/uos_src
+       bash ./export_logs
 	;;
 
     "dpkg")
-	build_package
+       cd /usr/bin/uos_src
+       bash ./build_package
 	;;
 	
     "package")
-	download_packages
+       cd /usr/bin/uos_src
+	bash ./download_packages
 	;;
 	
     "activation")
-	echo "将进行kms激活，是否进行激活尝试（有可能退出当前激活:yes/no）"
+	echo "将进行kms激活，是否进行激活尝试?(yes/no)"
+       echo "（有可能退出当前激活）"
 	read activation_method
 	while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
 	   echo "请输入正确的选项：yes 或 no (y/n)"
@@ -414,6 +224,10 @@ case "$operation" in
 	else
 	   exit 0
 	fi
+	;;
+    "ssh")
+       cd /usr/bin/uos_src
+	bash ./ssh_config
 	;;
 	
 	*)

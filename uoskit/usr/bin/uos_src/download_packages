@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# 设置全局变量
+ORIGIN=""
+PKGNAMES=()
+BASE_PATH=pool/main
+WGET=wget
+OPTIONS='--mirror -r -np -R "*index.html*" -nd -e robots=off'
+DIR_LOCAL="debs-all"
+DIR_INSTALL="debs-install"
+DEL_MATCH='*-dev* *-dbgsym* *-doc*'
+
+# 错误退出函数
+error_exit() {
+    echo "错误：$1" >&2
+    # 其他调试信息
+    exit 1
+}
+
+echo "请输入仓库源地址（ORIGIN）:"
+read ORIGIN_INPUT
+ORIGIN="$ORIGIN_INPUT"
+
+while true; do
+    echo "请输入要下载的单个包名（例如：kwin、kwayland）:"
+    read PKG_INPUT
+    PKGNAMES=($PKG_INPUT)
+
+    if [ -z "$ORIGIN" ] || [ -z "${PKGNAMES[*]}" ]; then
+        error_exit "仓库地址或者包名为空" 
+    elif [ ${#PKGNAMES[@]} -gt 1 ]; then
+        error_exit "输入了多个包名，请重新输入"
+    else
+        break
+    fi
+done
+
+if [ -d "$DIR_LOCAL" ]; then
+    rm -r "$DIR_LOCAL"
+fi
+mkdir "$DIR_LOCAL" -v
+
+if [ -d "$DIR_INSTALL" ]; then
+    rm -r "$DIR_INSTALL"
+fi
+mkdir "$DIR_INSTALL" -v
+
+cd "$DIR_LOCAL"
+
+if [ ! "${PKGNAMES[*]}" ]; then
+    # 如果 PKGNAMES 数组为空，尝试下载所有软件包
+    if $WGET $OPTIONS "$ORIGIN/"; then
+        echo "下载成功。"
+    else
+        echo "下载失败。退出脚本..."
+        exit 1
+    fi
+else
+    # 如果只能一次下载一个软件包，处理第一个包名
+    pkg="${PKGNAMES[0]}"
+    if [ "${pkg:0:3}" = "lib" ]; then
+        pkg_path="$BASE_PATH/${pkg:0:4}/$pkg/"
+    else
+        pkg_path="$BASE_PATH/${pkg:0:1}/$pkg/"
+    fi
+    if $WGET $OPTIONS "$ORIGIN/$pkg_path"; then
+        echo "$pkg 下载成功。"
+    else
+        echo "$pkg 下载失败。退出脚本..."
+        cd ..
+	 sudo rm -rf debs-all debs-install
+        exit 1
+    fi
+fi
+
+cp *.deb "../$DIR_INSTALL"
+cd "../$DIR_INSTALL"
+ls $DEL_MATCH | xargs rm -rf
+cd ..
+zip -r deb-install.zip "$DIR_INSTALL" || error_exit "打包失败"
+
+# 创建桌面上的 deb 文件夹
+DESKTOP_PATH=~/Desktop
+DEB_FOLDER="$DESKTOP_PATH/${PKG_INPUT}_deb"
+
+# 检查文件夹是否存在，如果存在就删除
+if [ -d "$DEB_FOLDER" ]; then
+    rm -r "$DEB_FOLDER"
+fi
+
+# 创建文件夹
+mkdir "$DEB_FOLDER" -v
+
+# 将整个目录和压缩文件移动到桌面的 deb 文件夹中
+mv "$DIR_LOCAL" "$DEB_FOLDER/"
+mv "$DIR_INSTALL" "$DEB_FOLDER/"
+mv "deb-install.zip" "$DEB_FOLDER/"
+
+echo ""
+echo "整个目录和压缩文件已移动到桌面上的 ${PKG_INPUT}_deb 文件夹。"
+
+exit 0
+

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# 错误退出函数
+error_exit() {
+    echo "$1" >&2
+    exit 1
+}
+
+# debug编译检查函数
+debug_check(){
+    if [ ! -d "debian" ]; then
+      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+    fi
+
+    if [ ! -d "build" ]; then
+      mkdir -p build
+    fi
+
+    cd build
+
+    if [ "$only_Run_cmake" = "true" ]; then
+        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+        exit 0
+    else
+        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+        sudo make install -j8
+        [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
+    fi
+}
+
+debug_check
+
+# 进入debian目录并获取Source字段
+cd debian
+source_name=$(grep -E "^Source:" control | awk '{print $2}')
+
+# 根据Source字段进行不同操作
+case "$source_name" in
+    "kwin"|"xorg-server")
+        # 检查rules文件末尾是否有override_dh_shlibdeps
+        if ! grep -q "override_dh_shlibdeps" rules; then
+            echo -e "override_dh_shlibdeps:\n\t\tdh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info" >> rules
+        fi
+        ;;
+    "kwayland")
+        # 切换回源码目录
+        cd ..
+        # 注释 if (BUILD_TESTING) 到 endif() 之间的内容
+        sed -i '/if (BUILD_TESTING)/, /endif()/ s/^/#/' CMakeLists.txt
+        ;;
+    *)
+        error_exit "Source字段不符合预期(kwin、kwayland、xorg-server)：$source_name "
+        ;;
+esac
+
+# 进入build目录，使用CMake配置和构建
+cd ../build
+sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+cd ..
+
+# 使用debuild进行打包
+sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8
+
+exit 0

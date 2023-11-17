@@ -1,0 +1,49 @@
+#!/bin/bash
+
+while true; do
+    # 选择要执行的操作
+    read -p "选择要执行的操作（1、2、3或4）:
+    1. 生成默认SSH密钥
+    2. 生成自定义SSH密钥
+    3. 生成github默认SSH密钥
+    4. 删除SSH密钥
+    （默认邮箱为王成宇所使用的）
+    " choice
+
+    if [ "$choice" == "1" ]; then
+        # 配置用户名和邮箱
+        git config --global user.name "WangChengYu"
+        git config --global user.email "wangchengyu@uniontech.com"
+        # 生成默认SSH密钥
+        yes "" | ssh-keygen -t rsa -C "wangchengyu@uniontech.com"
+        echo "已生成SSH密钥:"
+        cat ~/.ssh/id_rsa.pub
+        break
+    elif [ "$choice" == "2" ]; then
+        # 生成自定义SSH密钥
+        read -p "输入用户名: " custom_username
+        read -p "输入邮箱: " custom_email
+
+        git config --global user.name "$custom_username"
+        git config --global user.email "$custom_email"
+
+        yes "" | ssh-keygen -t rsa -C "$custom_email"
+        echo "已生成自定义SSH密钥:"
+        cat ~/.ssh/id_rsa.pub
+        break
+    elif [ "$choice" == "3" ]; then
+        # 生成自定义GITHUB-SSH密钥
+        ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_new_key -C "w2524180509@163.com"
+        cat ~/.ssh/my_new_key.pub
+        break
+    elif [ "$choice" == "4" ]; then
+        # 删除SSH密钥
+        read -p "输入要删除的密钥文件的路径（默认为~/.ssh/id_rsa）: " key_path
+        key_path=${key_path:-~/.ssh/id_rsa}  # 如果未提供路径，默认为~/.ssh/id_rsa
+        rm -f "$key_path" "$key_path.pub"
+        echo "已删除SSH密钥: $key_path"
+        break
+    else
+        echo "无效的选择，请重新输入。"
+    fi
+done
