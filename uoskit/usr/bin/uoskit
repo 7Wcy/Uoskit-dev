@@ -2,6 +2,8 @@
 
 # 帮助函数
 show_help() {
+    echo ""
+    echo "当前系统环境: " $XDG_SESSION_TYPE    
     echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
     echo ""
     echo "用法：$0 [选项]..."
@@ -99,19 +101,19 @@ while [ "$#" -gt 0 ]; do
         "activation" | "-a")
             operation="activation"
             ;;
-        "clone" | "-c") #在uos_src中
+        "clone" | "-c") #在kit_src中
             operation="clone"
             ;;
-        "dpkg" | "-d") #在uos_src中
+        "dpkg" | "-d") #在kit_src中
             operation="dpkg"
             ;;
-        "package" | "-p") #在uos_src中
+        "package" | "-p") #在kit_src中
             operation="package"
             ;;
-        "export" | "-e") #在uos_src中
+        "export" | "-e") #在kit_src中
             operation="export"
             ;;
-        "-ssh") #在uos_src中
+        "-ssh") #在kit_src中
             operation="ssh"
             ;;
         *)
@@ -154,7 +156,7 @@ case "$operation" in
         fi
         ;;
     "clone")
-        cd /usr/bin/uos_src
+        cd /usr/bin/kit_src
         bash ./clone_project
         ;;
     "list")
@@ -195,17 +197,17 @@ case "$operation" in
         esac
         ;;
     "export")
-       cd /usr/bin/uos_src
+       cd /usr/bin/kit_src
        bash ./export_logs
 	;;
 
     "dpkg")
-       cd /usr/bin/uos_src
+       cd /usr/bin/kit_src
        bash ./build_package
 	;;
 	
     "package")
-       cd /usr/bin/uos_src
+       cd /usr/bin/kit_src
 	bash ./download_packages
 	;;
 	
@@ -226,7 +228,7 @@ case "$operation" in
 	fi
 	;;
     "ssh")
-       cd /usr/bin/uos_src
+       cd /usr/bin/kit_src
 	bash ./ssh_config
 	;;
 	
