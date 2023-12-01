@@ -156,8 +156,7 @@ case "$operation" in
         fi
         ;;
     "clone")
-        cd /usr/bin/kit_src
-        bash ./clone_project
+        bash /usr/bin/kit_src/clone_project
         ;;
     "list")
         echo "当前机型选择1042、1050、M900(手动更改yes/y?)"
@@ -197,18 +196,15 @@ case "$operation" in
         esac
         ;;
     "export")
-       cd /usr/bin/kit_src
-       bash ./export_logs
+       bash /usr/bin/kit_src/export_logs
 	;;
 
     "dpkg")
-       cd /usr/bin/kit_src
-       bash ./build_package
+       bash /usr/bin/kit_src/build_package
 	;;
 	
     "package")
-       cd /usr/bin/kit_src
-	bash ./download_packages
+       bash /usr/bin/kit_src/download_packages
 	;;
 	
     "activation")

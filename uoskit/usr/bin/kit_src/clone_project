@@ -40,13 +40,17 @@ if [ "$clone_Project_name" == "base/xorg-server" ]; then
     clone_Project_name="xorg-server"
 fi
 
+# 进入项目目录并设置 Git 钩子
+cd "$clone_Project_name" && mkdir -p .git/hooks && \
+    curl -Lo "$(git rev-parse --git-dir)/hooks/commit-msg" "$git_url/tools/hooks/commit-msg" && \
+    chmod +x "$(git rev-parse --git-dir)/hooks/commit-msg"
+
 # 安装项目依赖
 echo ""
 echo ""
 echo "尝试安装$clone_Project_name依赖..."
 echo ""
 echo ""
-cd "$clone_Project_name"
 sudo apt build-dep ./
 if [ $? -ne 0 ]; then
     error_exit "安装依赖失败，源错误，请修正后，重新运行。"
