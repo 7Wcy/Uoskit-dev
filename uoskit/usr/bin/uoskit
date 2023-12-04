@@ -3,7 +3,7 @@
 # 帮助函数
 show_help() {
     echo ""
-    echo "当前系统环境: " $XDG_SESSION_TYPE    
+    echo "当前系统环境:" $XDG_SESSION_TYPE    
     echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
     echo ""
     echo "用法：$0 [选项]..."

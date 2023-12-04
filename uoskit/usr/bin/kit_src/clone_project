@@ -49,7 +49,7 @@ cd "$clone_Project_name" && mkdir -p .git/hooks && \
 echo ""
 echo ""
 echo "尝试安装$clone_Project_name依赖..."
-echo ""
+echo "./安装依赖在切换分支后可能会导致依赖未安装完全，出现编译错误在安装一遍依赖即可。"
 echo ""
 sudo apt build-dep ./
 if [ $? -ne 0 ]; then
