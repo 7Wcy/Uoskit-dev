@@ -8,7 +8,7 @@ error_exit() {
 }
 
 # 定义项目数组
-projects=("deepin-kwin" "kwayland" "base/xorg-server" "dde-session-shell")
+projects=("deepin-kwin" "kwayland" "dde-kwin" "base/xorg-server" "dde-session-shell")
 
 echo "要克隆哪个项目？(确保源和软件包已经安装)"
 
@@ -24,7 +24,7 @@ while true; do
         clone_Project_name="${projects[clone_Project_number-1]}"
         break
     else
-        echo "请输入正确的选项数字: 1、2、3、4"
+        echo "请输入正确的选项数字: 1、2、3、4、5"
     fi
 done
 
@@ -33,7 +33,7 @@ git_url="http://gerrit.uniontech.com/"
 project_url="$git_url$clone_Project_name"
 
 # 克隆项目
-git clone "$project_url" || error_exit "git clone失败，请查看网络或者权限是否有问题，请修正后，重新运行。"
+git clone "$project_url" || error_exit "clone失败，请查看网络或者权限是否有问题，请修正后，重新运行。"
 
 # 如果是 xorg-server 项目，额外处理
 if [ "$clone_Project_name" == "base/xorg-server" ]; then

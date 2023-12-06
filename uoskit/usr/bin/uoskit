@@ -20,7 +20,6 @@ show_help() {
     echo "  -a       进行激活操作"
     echo "  -ssh     配置ssh公钥信息"
     echo "  ..."
-    echo ""
 }
 
 # 错误退出函数
@@ -118,7 +117,7 @@ while [ "$#" -gt 0 ]; do
             ;;
         *)
             show_help
-            error_exit "请参考"
+            error_exit
             ;;
     esac
     shift
@@ -230,7 +229,7 @@ case "$operation" in
 	
 	*)
 	show_help
-	error_exit "请参考"
+	error_exit
 	;;
 
 esac
