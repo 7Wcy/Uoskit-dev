@@ -1,8 +1,7 @@
 Package: dev-uoskit-toolkit
-Version: 3.1.4
+Version: 3.1.5
 Architecture: all
 Maintainer: uos <uos@uniontech.com>
-Secion: utils
+Section: utils
 Priority: optional
-Installed_Size: 36
-Description: uoskit工具，适合UOS开发工作。快捷执行开发命令，安装后执行uoskit即可查看帮助信息。
+Description: uoskit工具，适合UOS开发工作。快捷执行开发命令，安装后执行 'uoskit' 即可查看帮助信息。
