@@ -5,14 +5,12 @@ SCRIPT_VERSION="3.1.5"
 
 # 帮助函数
 show_help() {
+    echo "当前系统环境:" $XDG_SESSION_TYPE
     echo ""
-    echo "当前系统环境:" $XDG_SESSION_TYPE    
     echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
-    echo ""
     echo "用法：$0 [选项]..."
     echo ""
     echo "常用开发功能:"
-    echo ""
     echo "  -l       添加源"
     echo "  -s       安装开发人员需要的软件包"
     echo "  -c       克隆项目"
@@ -21,16 +19,13 @@ show_help() {
     echo "  -d       进行出包"
     echo ""
     echo "辅助功能:"
-    echo ""
     echo "  -h       显示帮助信息"
     echo "  -a       进行激活操作"
     echo "  -e       导出此系统的全量日志"
     echo "  -p       下载指定包或全量包"
     echo "  -ssh     配置ssh公钥信息"
     echo "  ..."
-    echo ""
     echo "脚本版本号：$SCRIPT_VERSION"
-    echo ""
 }
 
 # 错误退出函数
