@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.1.5"
+SCRIPT_VERSION="3.1.6"
 
 # 帮助函数
 show_help() {
@@ -177,19 +177,20 @@ case "$operation" in
 
         case "$vim_sources" in
             "M900")
-                echo "备份当前源："
-                cat /etc/apt/sources.list >> ~/Desktop/备份源文件.txt
+                echo "备份当前源到桌面..."
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
                 sudo sh -c "cat /usr/bin/uoskit_M900_list.txt >> /etc/apt/sources.list"
-		echo ""
+		   echo ""
                 check_sources
                 ;;
             "1042")
-                echo "还未推出"
-                exit 0
-                #sudo sh -c "echo '' > /etc/apt/sources.list"
-                #sudo sh -c "cat ~/usr/bin/uoskit_1042_list.txt" >> /etc/apt/sources.list
-                #check_sources
+                echo "备份当前源到桌面..."
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
+                sudo sh -c "echo '' > /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/uoskit_1042_list.txt >> /etc/apt/sources.list"
+                echo ""
+                check_sources
                 ;;
             "1050")
                 echo "还未推出"
