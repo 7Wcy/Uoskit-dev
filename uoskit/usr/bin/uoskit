@@ -178,7 +178,7 @@ case "$operation" in
         case "$vim_sources" in
             "M900")
                 echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
                 sudo sh -c "cat /usr/bin/M900_list.txt >> /etc/apt/sources.list"
 		   echo ""
@@ -186,17 +186,24 @@ case "$operation" in
                 ;;
             "1042")
                 echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
                 sudo sh -c "cat /usr/bin/1042_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;
-            "1060")
+            "105x")
                 echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/1060_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/105x_list.txt >> /etc/apt/sources.list"
+                echo ""
+                check_sources
+            "106x")
+                echo "备份当前源到桌面..."
+                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
+                sudo sh -c "echo '' > /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/106x_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;

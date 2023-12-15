@@ -1,0 +1,5 @@
+
+deb [trusted=yes] http://pools.uniontech.com/desktop-professional eagle/1055 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable main
+
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1055/release-candidate/I-WNjuS4uk05MDAj5Li76aKYMjAyMy0wMi0xNiAxMDowNDoyNA unstable main
