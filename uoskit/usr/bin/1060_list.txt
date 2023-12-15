@@ -1,0 +1,16 @@
+
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1061 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/desktop-professional eagle main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release/ unstable main 
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1060 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1062 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release-candidate/W-eql-WPo-euoeeQhuWZqF0xMDYwdTLln4vngrnpnIDmsYLkv67mlLnmj5DmtYstMjAyMzEyMDIyMDIzLTEyLTAyIDIwOjU5OjU1 unstable main
+
+
+
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1061 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/desktop-professional eagle main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release/ unstable main 
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1060 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1062 main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release-candidate/W-eql-WPo-euoeeQhuWZqF0xMDYwdTLln4vngrnpnIDmsYLkv67mlLnmj5DmtYstMjAyMzEyMDIyMDIzLTEyLTAyIDIwOjU5OjU1 unstable main

@@ -45,6 +45,11 @@ cd "$clone_Project_name" && mkdir -p .git/hooks && \
     curl -Lo "$(git rev-parse --git-dir)/hooks/commit-msg" "$git_url/tools/hooks/commit-msg" && \
     chmod +x "$(git rev-parse --git-dir)/hooks/commit-msg"
 
+# 如果是 xorg-server 项目，额外处理
+if [ "$clone_Project_name" == "deepin-kwin" ]; then
+    clone_Project_name="deepin-kwin"
+fi
+
 # 安装项目依赖
 echo ""
 echo ""
@@ -52,9 +57,7 @@ echo "尝试安装$clone_Project_name依赖..."
 echo ""
 echo ""
 
-cd debian
-rely_name=$(grep "Source:" control | awk '{print $2}')
-sudo apt build-dep $rely_name
+sudo apt build-dep $clone_Project_name
 
 if [ $? -ne 0 ]; then
     error_exit "安装依赖失败，请修正后，重新运行。"

@@ -6,31 +6,9 @@ error_exit() {
     exit 1
 }
 
-# debug编译检查函数
-debug_check(){
-    if [ ! -d "debian" ]; then
-      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
-    fi
-
-    if [ ! -d "build" ]; then
-      mkdir -p build
-    fi
-
-    cd build
-
-    if [ "$only_Run_cmake" = "true" ]; then
-        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-        exit 0
-    else
-        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-        sudo make install -j8
-        [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
-    fi
-}
-
-debug_check
+if [ ! -d "debian" ]; then
+   error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+fi
 
 # 进入debian目录并获取Source字段
 cd debian
@@ -43,6 +21,7 @@ case "$source_name" in
         if ! grep -q "override_dh_shlibdeps" rules; then
             echo -e "override_dh_shlibdeps:\n\t\tdh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info" >> rules
         fi
+        cd ..
         ;;
     "kwayland")
         # 切换回源码目录
@@ -55,10 +34,27 @@ case "$source_name" in
         ;;
 esac
 
-# 进入build目录，使用CMake配置和构建
-cd ../build
+
+
+if [ ! -d "build" ]; then
+   mkdir -p build
+fi
+
+cd build
+
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
+if [ $? -ne 0 ]; then
+  error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+
+fi
+
 cd ..
+
+echo ""
+echo ""
+echo "使用 debuild 进行 debug 打包"
+echo ""
+echo ""
 
 # 使用debuild进行打包
 sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8

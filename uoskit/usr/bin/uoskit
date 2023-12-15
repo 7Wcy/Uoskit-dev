@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.1.6"
+SCRIPT_VERSION="3.2.0"
 
 # 帮助函数
 show_help() {
@@ -168,36 +168,37 @@ case "$operation" in
         bash /usr/bin/kit_src/clone_project
         ;;
     "list")
-        echo "当前机型选择1042、1050、M900(手动更改yes/y?)"
+        echo "当前机型选择1042、1060、M900(手动更改yes/y?)"
         read vim_sources
-        while [[ ! $vim_sources =~ ^(1042|1050|yes|y|M900)$ ]]; do
-            echo "请输入正确的选项：1042、1050、M900、yes/y"
+        while [[ ! $vim_sources =~ ^(1042|1060|yes|y|M900)$ ]]; do
+            echo "请输入正确的选项：1042、1060、M900、yes/y"
             read vim_sources
         done
 
         case "$vim_sources" in
             "M900")
                 echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
+                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/uoskit_M900_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/M900_list.txt >> /etc/apt/sources.list"
 		   echo ""
                 check_sources
                 ;;
             "1042")
                 echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
+                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/uoskit_1042_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/1042_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;
-            "1050")
-                echo "还未推出"
-                exit 0
-                #sudo sh -c "echo '' > /etc/apt/sources.list"
-                #sudo sh -c "cat ~/usr/bin/uoskit_1042_list.txt" >> /etc/apt/sources.list
-                #check_sources
+            "1060")
+                echo "备份当前源到桌面..."
+                cat /etc/apt/sources.list >> ~/Desktop/被$vim_sources替换的备份源.txt
+                sudo sh -c "echo '' > /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/1060_list.txt >> /etc/apt/sources.list"
+                echo ""
+                check_sources
                 ;;
             "yes"|"y")
                 sudo vim /etc/apt/sources.list
