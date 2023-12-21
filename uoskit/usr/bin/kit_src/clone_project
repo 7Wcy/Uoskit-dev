@@ -45,9 +45,9 @@ cd "$clone_Project_name" && mkdir -p .git/hooks && \
     curl -Lo "$(git rev-parse --git-dir)/hooks/commit-msg" "$git_url/tools/hooks/commit-msg" && \
     chmod +x "$(git rev-parse --git-dir)/hooks/commit-msg"
 
-# 如果是 xorg-server 项目，额外处理
+# 如果是 deepin-kwin 项目，额外处理
 if [ "$clone_Project_name" == "deepin-kwin" ]; then
-    clone_Project_name="deepin-kwin"
+    clone_Project_name="kwin"
 fi
 
 # 安装项目依赖
