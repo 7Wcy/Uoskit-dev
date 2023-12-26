@@ -170,8 +170,8 @@ case "$operation" in
     "list")
         echo "当前机型选择1042、1060、M900(手动更改yes/y?)"
         read vim_sources
-        while [[ ! $vim_sources =~ ^(1042|1060|yes|y|M900)$ ]]; do
-            echo "请输入正确的选项：1042、1060、M900、yes/y"
+        while [[ ! $vim_sources =~ ^(1042|1050|1060|yes|y|M900)$ ]]; do
+            echo "请输入正确的选项：1042、1050、1060、M900、yes/y"
             read vim_sources
         done
 
@@ -192,7 +192,7 @@ case "$operation" in
                 echo ""
                 check_sources
                 ;;
-            "105x")
+            "1050")
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
@@ -200,7 +200,7 @@ case "$operation" in
                 echo ""
                 check_sources
                 ;;
-            "106x")
+            "1060")
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
