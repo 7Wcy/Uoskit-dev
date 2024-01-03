@@ -30,11 +30,12 @@ case "$source_name" in
         sed -i '/if (BUILD_TESTING)/, /endif()/ s/^/#/' CMakeLists.txt
         ;;
     *)
-        error_exit "Source字段不符合预期(kwin、kwayland、xorg-server)：$source_name "
+        # 输出提示信息
+        echo "Source字段检查跳过(非 kwin、kwayland、xorg-server)：$source_name"
+        echo "脚本继续执行..."
+        echo ""
         ;;
 esac
-
-
 
 if [ ! -d "build" ]; then
    mkdir -p build

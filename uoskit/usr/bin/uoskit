@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.2.3"
+SCRIPT_VERSION="3.2.4"
 
 # 帮助函数
 show_help() {
@@ -23,9 +23,9 @@ show_help() {
     echo "  -a       进行激活操作"
     echo "  -e       导出此系统的全量日志"
     echo "  -p       下载指定包或全量包"
-    echo "  -t       注销系统"
-    echo "  -ssh     配置ssh公钥信息"
     echo "  -r       重启或者注销系统"
+    echo "  -ssh     配置ssh公钥信息"
+    echo "  -dbus    dbus接口调用"
     echo "  ..."
     echo "脚本版本号：$SCRIPT_VERSION"
 }
@@ -108,6 +108,9 @@ while [ "$#" -gt 0 ]; do
         "activation" | "-a")
             operation="activation"
             ;;
+         "restart" | "-r")
+            operation="restart"
+            ;;
         "clone" | "-c") #在kit_src中
             operation="clone"
             ;;
@@ -120,11 +123,11 @@ while [ "$#" -gt 0 ]; do
         "export" | "-e") #在kit_src中
             operation="export"
             ;;
-        "restart" | "-r")
-            operation="restart"
-            ;;
         "-ssh") #在kit_src中
             operation="ssh"
+            ;;
+        "-dbus") #在kit_src中
+            operation="dbus"
             ;;
         *)
             show_help
@@ -185,7 +188,7 @@ case "$operation" in
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/M900_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/kit_list/M900_list.txt >> /etc/apt/sources.list"
 		   echo ""
                 check_sources
                 ;;
@@ -193,7 +196,7 @@ case "$operation" in
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/1042_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/kit_list/1042_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;
@@ -201,7 +204,7 @@ case "$operation" in
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/105x_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/kit_list/105x_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;
@@ -209,7 +212,7 @@ case "$operation" in
                 echo "备份当前源到桌面..."
                 cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
                 sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/106x_list.txt >> /etc/apt/sources.list"
+                sudo sh -c "cat /usr/bin/kit_list/106x_list.txt >> /etc/apt/sources.list"
                 echo ""
                 check_sources
                 ;;
@@ -230,9 +233,10 @@ case "$operation" in
     "package")
        bash /usr/bin/kit_src/download_packages
 	;;
-
+    "dbus")
+       bash /usr/bin/kit_src/dbus_interface
+	;;
     "restart")
-        echo "请输入数字 1 或者 2"
         echo "1：注销 2：重启 "
         read number_sources
         while [[ ! $number_sources =~ ^(1|2)$ ]]; do

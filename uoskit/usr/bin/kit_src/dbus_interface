@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# 错误退出函数
+error_exit() {
+    echo "错误：$1" >&2
+    # 其他调试信息
+    exit 1
+}
+
+# 定义接口数组
+projects=("控制台" "监控dbus")
+
+echo "想使用哪个dbus接口？"
+
+# 显示接口选项
+for ((i=0; i<${#projects[@]}; i++)); do
+    echo "$((i+1)). ${projects[i]}"
+done
+
+echo ""
+
+# 循环读取用户输入，直到输入正确的选项
+while true; do
+    read -p "请输入接口序号: " clone_Project_number
+    case "$clone_Project_number" in
+        "1")
+            echo ""
+            echo "已打开控制台，请查看"	
+            qdbus org.kde.KWin /KWin showDebugConsole
+            ;;
+        "2")
+            echo ""
+            echo "正在监控中..."
+            dbus-monitor --session interface=com.deepin.wm
+            ;;
+        *)
+            echo "请输入正确的选项数字: 1、2"
+            continue
+            ;;
+    esac
+    break
+done
