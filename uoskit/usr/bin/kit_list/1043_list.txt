@@ -1,0 +1,19 @@
+deb [trusted=yes] http://pools.uniontech.com/desktop-professional eagle/1043 main contrib non-free
+#deb [trusted=yes] http://sh-internal.deepin.com/repo/uos-sw64-base/ eagle main contrib non-free
+deb [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-ghc/ eagle main
+deb [trusted=yes] http://aptly.uniontech.com/pkg/sw1040-rebuild/release-candidate/20210219/ unstable main
+#deb [trusted=yes] http://sh-internal.deepin.com/repo/v20/uos-sw64-addon eagle main
+deb [trusted=yes] http://sh-internal.deepin.com/repo/v20/desktop-professional/dde-1042 eagle/sp4 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1043 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1043/release-candidate/5Yac5Lia6ZO26KGMMjAyM-W5tOahjOmdouaTjeS9nOezu-e7n-mHh-i0remhueebrjIwMjMtMDUtMjIgMTY6MTY6MTg unstable main
+deb [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1043/release-candidate/5Yac5Lia6ZO26KGMMjAyM-W5tOahjOmdouaTjeS9nOezu-e7n-mHh-i0remhueebrjIwMjMtMDUtMjIgMTY6MTY6MTg unstable non-free
+
+deb-src [trusted=yes] http://pools.uniontech.com/desktop-professional eagle/1043 main contrib non-free
+#deb-src [trusted=yes] http://sh-internal.deepin.com/repo/uos-sw64-base/ eagle main contrib non-free
+deb-src [trusted=yes] http://sh-internal.deepin.com/repo/project/sw-ghc/ eagle main
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/sw1040-rebuild/release-candidate/20210219/ unstable main
+#deb-src [trusted=yes] http://sh-internal.deepin.com/repo/v20/uos-sw64-addon eagle main
+deb-src [trusted=yes] http://sh-internal.deepin.com/repo/v20/desktop-professional/dde-1042 eagle/sp4 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1043 main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1043/release-candidate/5Yac5Lia6ZO26KGMMjAyM-W5tOahjOmdouaTjeS9nOezu-e7n-mHh-i0remhueebrjIwMjMtMDUtMjIgMTY6MTY6MTg unstable main
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1043/release-candidate/5Yac5Lia6ZO26KGMMjAyM-W5tOahjOmdouaTjeS9nOezu-e7n-mHh-i0remhueebrjIwMjMtMDUtMjIgMTY6MTY6MTg unstable non-free
