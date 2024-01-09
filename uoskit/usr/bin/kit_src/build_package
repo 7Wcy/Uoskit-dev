@@ -37,6 +37,8 @@ case "$source_name" in
         ;;
 esac
 
+cd ..
+
 if [ ! -d "build" ]; then
    mkdir -p build
 fi
@@ -46,7 +48,6 @@ cd build
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
 if [ $? -ne 0 ]; then
   error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-
 fi
 
 cd ..
