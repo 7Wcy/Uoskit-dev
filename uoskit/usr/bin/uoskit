@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.2.5"
+SCRIPT_VERSION="3.2.6"
 
 # 帮助函数
 show_help() {
@@ -176,52 +176,36 @@ case "$operation" in
         bash /usr/bin/kit_src/clone_project
         ;;
     "list")
-        echo "当前机型选择1042、1050、1060、M900(手动更改yes/y?)"
-        read vim_sources
-        while [[ ! $vim_sources =~ ^(1042|1050|1060|yes|y|M900)$ ]]; do
-            echo "请输入正确的选项：1042、1050、1060、M900、yes/y"
-            read vim_sources
+        echo "请选择机型：1042、1043、1050、1060、M900，或手动输入yes/y修改源。"
+        read -p "请输入您的选择：" vim_sources
+        while [[ ! $vim_sources =~ ^(1042|1043|1050|1060|M900|yes|y)$ ]]; do
+            echo ""
+            echo "请输入正确的选项：1042、1043、1050、1060、M900、yes/y"
+            read -p "请确认：" vim_sources
         done
-
+        
+        update_sources() {
+            echo "备份当前源到桌面..."
+            cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
+            sudo sh -c "echo '' > /etc/apt/sources.list"
+            sudo sh -c "cat $1 >> /etc/apt/sources.list"
+            echo ""
+            check_sources
+        }
+	 
         case "$vim_sources" in
-            "M900")
-                echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/kit_list/M900_list.txt >> /etc/apt/sources.list"
-		   echo ""
-                check_sources
-                ;;
-            "1042")
-                echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/kit_list/1042_list.txt >> /etc/apt/sources.list"
-                echo ""
-                check_sources
-                ;;
-            "1050")
-                echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/kit_list/105x_list.txt >> /etc/apt/sources.list"
-                echo ""
-                check_sources
-                ;;
-            "1060")
-                echo "备份当前源到桌面..."
-                cat /etc/apt/sources.list >> ~/Desktop/备份源.txt
-                sudo sh -c "echo '' > /etc/apt/sources.list"
-                sudo sh -c "cat /usr/bin/kit_list/106x_list.txt >> /etc/apt/sources.list"
-                echo ""
-                check_sources
-                ;;
+            "M900")   update_sources "/usr/bin/kit_list/M900_list.txt" ;;
+            "1042")   update_sources "/usr/bin/kit_list/1042_list.txt" ;;
+            "1043")   update_sources "/usr/bin/kit_list/1043_list.txt" ;;
+            "1050")   update_sources "/usr/bin/kit_list/105x_list.txt" ;;
+            "1060")   update_sources "/usr/bin/kit_list/106x_list.txt" ;;
             "yes"|"y")
-                sudo vim /etc/apt/sources.list
-                sudo apt update
-                ;;
+            sudo vim /etc/apt/sources.list
+            sudo apt update
+            ;;
         esac
         ;;
+
     "export")
        bash /usr/bin/kit_src/export_logs
 	;;
