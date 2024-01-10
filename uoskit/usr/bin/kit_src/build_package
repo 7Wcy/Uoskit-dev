@@ -38,8 +38,6 @@ case "$source_name" in
         ;;
 esac
 
-cd ..
-
 echo ""
 echo ""
 echo "使用 sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8 命令进行打包"

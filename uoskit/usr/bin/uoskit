@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.2.6"
+SCRIPT_VERSION="3.2.7"
 
 # 帮助函数
 show_help() {
     echo "当前系统环境:" $XDG_SESSION_TYPE
     echo ""
     echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
-    echo "用法：$0 [选项]..."
     echo ""
     echo "常用开发功能:"
     echo "  -l       添加源"
@@ -37,13 +36,13 @@ error_exit() {
 }
 
 # debug编译检查函数
-debug_check(){
+debug_check() {
     if [ ! -d "debian" ]; then
-      error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
+        error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
     fi
 
     if [ ! -d "build" ]; then
-      mkdir -p build
+        mkdir -p build
     fi
 
     cd build
@@ -66,15 +65,15 @@ install_software() {
 }
 
 #检查源配置是否正确函数
-function check_sources() {
+check_sources() {
     echo "源已配置完成，是否更新？(yes/no)"
-    read answer
-    while [ "$answer" != "yes" ] && [ "$answer" != "no" ] && [ "$answer" != "y" ] && [ "$answer" != "n" ]; do
+    read user_response
+    while [[ ! $user_response =~ ^(yes|no|y|n)$ ]]; do
         echo "请输入正确的选项：yes 或 no (y/n)"
-        read answer
+        read user_response
     done
 
-    if [ "$answer" = "yes" ] || [ "$answer" = "y" ]; then
+    if [[ "$user_response" =~ ^(yes|y)$ ]]; then
         sudo apt update
     else
         echo "脚本结束。"
@@ -93,10 +92,10 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         "make" | "-m" | "-mc")
             operation="make"
+            only_Run_cmake="false"
+
             if [ "$1" = "-mc" ]; then
                 only_Run_cmake="true"
-            else
-                only_Run_cmake="false"
             fi
             ;;
         "software" | "-s")
@@ -108,25 +107,25 @@ while [ "$#" -gt 0 ]; do
         "activation" | "-a")
             operation="activation"
             ;;
-         "restart" | "-r")
+        "restart" | "-r")
             operation="restart"
             ;;
-        "clone" | "-c") #在kit_src中
+        "clone" | "-c")
             operation="clone"
             ;;
-        "dpkg" | "-d") #在kit_src中
+        "dpkg" | "-d")
             operation="dpkg"
             ;;
-        "package" | "-p") #在kit_src中
+        "package" | "-p")
             operation="package"
             ;;
-        "export" | "-e") #在kit_src中
+        "export" | "-e")
             operation="export"
             ;;
-        "-ssh") #在kit_src中
+        "-ssh")
             operation="ssh"
             ;;
-        "-dbus") #在kit_src中
+        "-dbus")
             operation="dbus"
             ;;
         *)
@@ -142,16 +141,16 @@ case "$operation" in
         debug_check
         echo "已完成安装。"
         echo "1:注销 2:重启 3:退出"
-        read answer
+        read user_response
 
-        while [[ ! $answer =~ ^(1|2|3)$ ]]; do
+        while [[ ! $user_response =~ ^(1|2|3)$ ]]; do
              echo "请输入正确的选项：1 或 2 或 3"
-             read answer
+             read user_response
         done
 
-        if [[ "$answer" =~ ^(1)$ ]]; then
+        if [[ "$user_response" == 1 ]]; then
              sudo systemctl restart lightdm.service
-        elif [[ "$answer" =~ ^(2)$ ]]; then
+        elif [[ "$user_response" == 2 ]]; then
              sudo reboot
         else
              echo "操作完成！"
@@ -228,7 +227,7 @@ case "$operation" in
             read number_sources
         done
 
-        if [[ "$number_sources" = 1 ]]; then
+        if [[ "$number_sources" == 1 ]]; then
             sudo systemctl restart lightdm.service
         else
             sudo reboot
@@ -236,32 +235,31 @@ case "$operation" in
 	;;
 	
     "activation")
-	echo "将进行kms激活，是否进行激活尝试?(yes/no)"
+    echo "将进行kms激活，是否进行激活尝试?(yes/no)"
        echo "（有可能退出当前激活）"
-	read activation_method
-	while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
-	   echo "请输入正确的选项：yes 或 no (y/n)"
+    read activation_method
+    while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
+       echo "请输入正确的选项：yes 或 no (y/n)"
            read activation_method
-	done
-	
-	if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
-	   uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
-	   echo "已进行kms激活，请验证。"
-	else
-	   exit 0
-	fi
-	;;
+    done
+    
+    if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
+       uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
+       echo "已进行kms激活，请验证。"
+    else
+       exit 0
+    fi
+    ;;
     "ssh")
        cd /usr/bin/kit_src
-	bash ./ssh_config
-	;;
-	
-	*)
-	show_help
-	error_exit
-	;;
+    bash ./ssh_config
+    ;;
+    
+    *)
+    show_help
+    error_exit
+    ;;
 
 esac
-	
-exit 0
 
+exit 0
