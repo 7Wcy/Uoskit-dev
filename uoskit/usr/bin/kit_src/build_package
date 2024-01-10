@@ -34,27 +34,15 @@ case "$source_name" in
         echo "Source字段检查跳过(非 kwin、kwayland、xorg-server)：$source_name"
         echo "脚本继续执行..."
         echo ""
+        cd ..
         ;;
 esac
 
 cd ..
 
-if [ ! -d "build" ]; then
-   mkdir -p build
-fi
-
-cd build
-
-sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-if [ $? -ne 0 ]; then
-  error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-fi
-
-cd ..
-
 echo ""
 echo ""
-echo "使用 debuild 进行 debug 打包"
+echo "使用 sudo DEB_CFLAGS_SET="-g3 -O0" debuild -b -us -uc -j8 命令进行打包"
 echo ""
 echo ""
 
