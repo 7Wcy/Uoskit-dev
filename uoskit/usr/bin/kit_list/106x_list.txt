@@ -1,16 +1,24 @@
-
 deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1061 main contrib non-free
 deb [trusted=yes] http://pools.uniontech.com/desktop-professional eagle main contrib non-free
-deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release/ unstable main 
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw-go eagle/1063 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1063/release/ unstable main 
+deb [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1063/release unstable non-free
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw eagle/1063 main contrib non-free
 deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1060 main contrib non-free
 deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1062 main contrib non-free
-deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release-candidate/W-eql-WPo-euoeeQhuWZqF0xMDYwdTLln4vngrnpnIDmsYLkv67mlLnmj5DmtYstMjAyMzEyMDIyMDIzLTEyLTAyIDIwOjU5OjU1 unstable main
-
+deb [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1063 main contrib non-free
+deb [trusted=yes] http://pools.uniontech.com/ppa/maintain-update eagle/1062-1063 main contrib non-free
+deb [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1063/release-candidate/44CQ56qX5Y-j566h55CG5Zmo44CRMTA2M-mXrumimOS-ruWkjeaPkOa1izIwMjQwMTAzMjAyNC0wMS0wMyAxOToxODoxMA unstable main
 
 
 deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1061 main contrib non-free
 deb-src [trusted=yes] http://pools.uniontech.com/desktop-professional eagle main contrib non-free
-deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release/ unstable main 
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw-go eagle/1063 main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1063/release/ unstable main 
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/nonfree-eagle-1063/release unstable non-free
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle-sw eagle/1063 main contrib non-free
 deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1060 main contrib non-free
 deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1062 main contrib non-free
-deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1062/release-candidate/W-eql-WPo-euoeeQhuWZqF0xMDYwdTLln4vngrnpnIDmsYLkv67mlLnmj5DmtYstMjAyMzEyMDIyMDIzLTEyLTAyIDIwOjU5OjU1 unstable main
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/dde-eagle eagle/1063 main contrib non-free
+deb-src [trusted=yes] http://pools.uniontech.com/ppa/maintain-update eagle/1062-1063 main contrib non-free
+deb-src [trusted=yes] http://aptly.uniontech.com/pkg/eagle-1063/release-candidate/44CQ56qX5Y-j566h55CG5Zmo44CRMTA2M-mXrumimOS-ruWkjeaPkOa1izIwMjQwMTAzMjAyNC0wMS0wMyAxOToxODoxMA unstable main
