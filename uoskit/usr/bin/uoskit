@@ -1,13 +1,24 @@
 #!/bin/bash
 
 # 定义脚本版本号
-SCRIPT_VERSION="3.2.8"
+SCRIPT_VERSION="3.2.9"
+
+# 检查是否有网络连接
+if ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
+    IP_ADDRESS=$(ifconfig eno1 | grep "inet " | awk '{print $2}')
+else
+    IP_ADDRESS="-- Not internet --"
+fi
+
+IP_NAME=$(whoami)
+HOME_DIR=$(eval echo ~$IP_NAME)
 
 # 帮助函数
 show_help() {
-    echo "当前系统环境:" $XDG_SESSION_TYPE
+    echo "目前系统环境:" $XDG_SESSION_TYPE
+    echo "主机地址:" $IP_NAME@$IP_ADDRESS --- $HOME_DIR
     echo ""
-    echo "脚本使用方法: uoskit [-h] [-m] [-mc] [-s] [-c] [-l] [-d] [-p] [-a] [-ssh]"
+    echo "脚本使用方法: uoskit [-h] [-l] [-s] [-c] [-m] [-mc] [-d] ... "
     echo ""
     echo "常用开发功能:"
     echo "  -l       添加源"
@@ -23,6 +34,7 @@ show_help() {
     echo "  -e       导出此系统的全量日志"
     echo "  -p       下载指定包或全量包"
     echo "  -r       重启或者注销系统"
+    echo "  -i       安装当前目录下所有deb包"
     echo "  -ssh     配置ssh公钥信息"
     echo "  -dbus    dbus接口调用"
     echo "  ..."
@@ -109,6 +121,9 @@ while [ "$#" -gt 0 ]; do
             ;;
         "restart" | "-r")
             operation="restart"
+            ;;
+        "install" | "-i")
+            operation="install"
             ;;
         "clone" | "-c")
             operation="clone"
@@ -220,45 +235,55 @@ case "$operation" in
        bash /usr/bin/kit_src/dbus_interface
 	;;
     "restart")
-        echo "1：注销 2：重启 "
-        read number_sources
-        while [[ ! $number_sources =~ ^(1|2)$ ]]; do
-            echo "请输入正确的选项：1 或者 2 "
-            read number_sources
-        done
+       echo "1：注销 2：重启 "
+       read number_sources
+       while [[ ! $number_sources =~ ^(1|2)$ ]]; do
+           echo "请输入正确的选项：1 或者 2 "
+           read number_sources
+       done
 
-        if [[ "$number_sources" == 1 ]]; then
-            sudo systemctl restart lightdm.service
-        else
-            sudo reboot
-        fi
+       if [[ "$number_sources" == 1 ]]; then
+           sudo systemctl restart lightdm.service
+       else
+           sudo reboot
+       fi
 	;;
-	
-    "activation")
-    echo "将进行kms激活，是否进行激活尝试?(yes/no)"
-       echo "（有可能退出当前激活）"
-    read activation_method
-    while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
-       echo "请输入正确的选项：yes 或 no (y/n)"
-           read activation_method
-    done
-    
-    if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
-       uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
-       echo "已进行kms激活，请验证。"
-    else
-       exit 0
-    fi
+    "install")
+        sudo dpkg -i *.deb
+
+        # 检查上一个命令的退出状态
+        if [ $? -ne 0 ]; then
+           error_exit "安装失败，请查看错误信息。"
+        fi
+        uoskit restart
     ;;
+	
+   "activation")
+       echo "将进行kms激活，是否进行激活尝试?(yes/no)"
+       echo "请输入选项: "
+       read activation_method
+       while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
+          echo "请输入正确的选项：yes 或 no (y/n)"
+          read activation_method
+       done
+    
+       if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
+          uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
+          echo "已进行kms激活，请验证。"
+       else
+          exit 0
+       fi
+       ;;
+
     "ssh")
        cd /usr/bin/kit_src
-    bash ./ssh_config
-    ;;
+       bash ./ssh_config
+       ;;
     
     *)
-    show_help
-    error_exit
-    ;;
+       show_help
+       error_exit
+       ;;
 
 esac
 
