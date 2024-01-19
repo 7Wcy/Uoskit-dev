@@ -1,33 +1,41 @@
 #!/bin/bash
 
-# 定义脚本版本号
-SCRIPT_VERSION="3.2.9"
-
-# 检查是否有网络连接
-if ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
-    # 获取有线网接口的 IP 地址
-    if [[ -n $(ip addr show eno1 | grep "state UP") ]]; then
-        IP_ADDRESS=$(ip addr show eno1 | awk '/inet / {print $2}' | cut -d/ -f1)
-    # 获取无线网接口的 IP 地址
-    elif [[ -n $(ip addr show wlp1s0 | grep "state UP") ]]; then
-        IP_ADDRESS=$(ip addr show wlp1s0 | awk '/inet / {print $2}' | cut -d/ -f1)
-    else
-        IP_ADDRESS="-- Not connected --"
-    fi
-else
-    IP_ADDRESS="-- Not internet --"
-fi
-
-
-IP_NAME=$(whoami)
-HOME_DIR=$(eval echo ~$IP_NAME)
+# 定义脚本版本号  
+SCRIPT_VERSION="3.2.9"  
+# 定义主机地址  
+IP_NAME=$(whoami)  
+HOME_DIR=$(eval echo ~$IP_NAME)  
+  
+INTERNET_CONNECT(){  
+    # 检查是否有网络连接  
+    if ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then  
+        # 检查有线网接口是否存在
+        if ip link show eno1 >/dev/null 2>&1; then
+            # 获取有线网接口的 IP 地址  
+            if [[ -n $(ip addr show eno1 | grep "state UP") ]]; then  
+                IP_ADDRESS=$(ip addr show eno1 | awk '/inet / {print $2}' | cut -d/ -f1)  
+                IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"  
+            fi
+        # 检查无线网接口是否存在
+        elif ip link show wlp1s0 >/dev/null 2>&1; then
+            # 获取无线网接口的 IP 地址  
+            if [[ -n $(ip addr show wlp1s0 | grep "state UP") ]]; then  
+                IP_ADDRESS=$(ip addr show wlp1s0 | awk '/inet / {print $2}' | cut -d/ -f1)  
+                IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"  
+            fi
+        else  
+            IPNAME_ADDRESS="-- Not connected --"  
+        fi
+    else  
+        IPNAME_ADDRESS="-- Not internet --"  
+    fi  
+}
+  
+INTERNET_CONNECT  
 
 # 帮助函数
 show_help() {
     echo "目前系统环境:" $XDG_SESSION_TYPE
-    echo "主机地址:" $IP_NAME@$IP_ADDRESS --- $HOME_DIR
-    echo ""
-    echo "脚本使用方法: uoskit [-h] [-l] [-s] [-c] [-m] [-mc] [-d] ... "
     echo ""
     echo "常用开发功能:"
     echo "  -l       添加源"
@@ -46,8 +54,9 @@ show_help() {
     echo "  -i       安装当前目录下所有deb包"
     echo "  -ssh     配置ssh公钥信息"
     echo "  -dbus    dbus接口调用"
+    echo "  -v       查看脚本版本号"
     echo "  ..."
-    echo "脚本版本号：$SCRIPT_VERSION"
+    echo "主机地址:" $IPNAME_ADDRESS
 }
 
 # 错误退出函数
@@ -152,6 +161,9 @@ while [ "$#" -gt 0 ]; do
         "-dbus")
             operation="dbus"
             ;;
+        "version" | "-v")
+            operation="version"
+            ;;
         *)
             show_help
             error_exit
@@ -242,6 +254,9 @@ case "$operation" in
 	;;
     "dbus")
        bash /usr/bin/kit_src/dbus_interface
+	;;
+    "version")
+       echo "脚本版本号：$SCRIPT_VERSION"
 	;;
     "restart")
        echo "1：注销 2：重启 "
