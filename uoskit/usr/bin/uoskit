@@ -1,11 +1,17 @@
 #!/bin/bash
 
-# 定义脚本版本号  
-SCRIPT_VERSION="3.2.11" 
-# 定义主机地址  
-IP_NAME=$(whoami)  
-HOME_DIR=$(eval echo ~$IP_NAME)  
-  
+# 脚本版本号
+SCRIPT_VERSION="3.3.0"
+
+# 获取架构信息
+architecture=$(lscpu | awk '/Architecture/ {print $2}')
+# 获取版本号
+version=$(grep 'MinorVersion' /etc/os-version | cut -d'=' -f2)
+
+# 主机地址
+IP_NAME=$(whoami)
+HOME_DIR=$(eval echo ~$IP_NAME)
+
 INTERNET_CONNECT() {
     # 获取默认网关
     DEFAULT_GATEWAY=$(ip route | grep default | awk '{print $3}')
@@ -46,7 +52,7 @@ INTERNET_CONNECT
 
 # 帮助函数
 show_help() {
-    echo "目前系统环境:" $XDG_SESSION_TYPE
+    echo "目前系统环境:$XDG_SESSION_TYPE 架构:$architecture 版本:$version "
     echo ""
     echo "常用开发功能:"
     echo "  -l       添加源"
@@ -103,6 +109,20 @@ debug_check() {
 # 安装软件函数
 install_software() {
     sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts -y
+    # 检查安装是否成功
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "软件安装完毕..."
+        echo ""
+        echo "正在打开openssh-server --- enbale..."
+        echo ""
+        sudo systemctl enable ssh
+        sudo service ssh restart
+        echo ""
+        echo "开发环境安装完成！"
+    else
+        echo "开发环境安装出现问题，请检查错误信息。"
+    fi
 }
 
 #检查源配置是否正确函数
