@@ -1,58 +1,62 @@
 #!/bin/bash
 
 # 脚本版本号
-SCRIPT_VERSION="3.3.2"
+SCRIPT_VERSION="3.3.3"
 
 # 获取架构信息
 architecture=$(lscpu | awk '/Architecture/ {print $2}')
-# 获取版本号
+# 获取系统版本号
 version=$(grep 'MinorVersion' /etc/os-version | cut -d'=' -f2)
 
 # 主机地址
 IP_NAME=$(whoami)
 HOME_DIR=$(eval echo ~$IP_NAME)
 
+# 网络ip地址判断函数
 INTERNET_CONNECT() {
     # 获取默认网关
     DEFAULT_GATEWAY=$(ip route | grep default | awk '{print $3}')
     
     # 检查是否有网络连接
     if [ -n "$DEFAULT_GATEWAY" ]; then
-        # 检查有线网接口是否存在
-        if ip link show eno1 >/dev/null 2>&1 || ip link show eth0 >/dev/null 2>&1; then
-            # 获取有线网接口的 IP 地址
-            local interface=""
-            if ip link show eno1 >/dev/null 2>&1; then
-                interface="eno1"
-            elif ip link show eth0 >/dev/null 2>&1; then
-                interface="eth0"
-            fi
 
-            # 获取有线网接口的 IP 地址
-            if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
-                IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
-                IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
+        # 定义有线网接口数组
+        wired_interfaces=("eno1" "eth0")
+        # 循环检查有线网接口
+        for interface in "${wired_interfaces[@]}"; do
+            if ip link show "$interface" >/dev/null 2>&1; then
+                # 获取有线网接口的 IP 地址
+                if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
+                    IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
+                    IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
+                    return
+                fi
             fi
-        # 如果有线网接口都不存在，则检查无线网接口
-        elif ip link show wlan0 >/dev/null 2>&1; then
-            # 获取无线网接口的 IP 地址
-            if [[ -n $(ip addr show wlan0 | grep "state UP") ]]; then
-                IP_ADDRESS=$(ip addr show wlan0 | awk '/inet / {print $2}' | cut -d/ -f1)
-                IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
+        done
+
+        # 定义无线网接口数组
+        wireless_interfaces=("wlan0" "wlp1s0" "wlp1s1")
+        # 循环检查无线网接口
+        for interface in "${wireless_interfaces[@]}"; do
+            if ip link show "$interface" >/dev/null 2>&1; then
+                # 获取无线网接口的 IP 地址
+                if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
+                    IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
+                    IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
+                    return
+                fi
             fi
-        else
-            IPNAME_ADDRESS="-- Not connected --"
-        fi
-    else
-        IPNAME_ADDRESS="-- Not internet --"
+        done
     fi
+
+    IPNAME_ADDRESS="-- Not connected --"
 }
 
 INTERNET_CONNECT  
 
 # 帮助函数
 show_help() {
-    echo "目前系统环境:$XDG_SESSION_TYPE 架构:$architecture 版本:$version "
+    echo "主机地址:" $IPNAME_ADDRESS
     echo ""
     echo "常用开发功能:"
     echo "  -l       添加源"
@@ -73,7 +77,7 @@ show_help() {
     echo "  -dbus    dbus接口调用"
     echo "  -v       查看脚本版本号"
     echo "  ..."
-    echo "主机地址:" $IPNAME_ADDRESS
+    echo "系统环境:$XDG_SESSION_TYPE 架构:$architecture 版本:$version "
 }
 
 # 错误退出函数
@@ -82,7 +86,14 @@ error_exit() {
     exit 1
 }
 
-# debug编译检查函数
+# 运行cmake命令
+run_cmake() {
+    local build_type=$1
+    sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..
+    [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..' 执行失败。编译中止。"
+}
+
+# debug编译安装函数
 debug_check() {
     if [ ! -d "debian" ]; then
         error_exit "当前不是源码文件！请在源码文件中运行脚本编译、安装、出包等操作！"
@@ -95,12 +106,9 @@ debug_check() {
     cd build
 
     if [ "$only_Run_cmake" = "true" ]; then
-        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
-        exit 0
+        run_cmake "Debug"
     else
-        sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..
-        [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ..' 执行失败。编译中止。"
+        run_cmake "Debug"
         sudo make install -j8
         [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
     fi
@@ -109,7 +117,6 @@ debug_check() {
 # 安装软件函数
 install_software() {
     sudo apt install qtcreator qtbase5-dev qt5-default gdb gcc g++ cmake make git openssh-server devscripts d-feet systemd-coredump -y
-    # 检查安装是否成功
     if [ $? -eq 0 ]; then
         echo ""
         echo "软件安装完毕..."
@@ -142,7 +149,7 @@ check_sources() {
     fi
 }
 
-# 检查是否提供参数，包括 --help 选项和 -m 参数的处理
+# 检查是否提供参数，包括 --help 选项和 -h 参数的处理
 if [ $# -eq 0 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     show_help
     exit 0
@@ -207,25 +214,10 @@ case "$operation" in
     "make")	 
         debug_check
         echo "已完成安装。"
-        echo "1:注销 2:重启 3:退出"
-        read user_response
-
-        while [[ ! $user_response =~ ^(1|2|3)$ ]]; do
-             echo "请输入正确的选项：1 或 2 或 3"
-             read user_response
-        done
-
-        if [[ "$user_response" == 1 ]]; then
-             sudo systemctl restart lightdm.service
-        elif [[ "$user_response" == 2 ]]; then
-             sudo reboot
-        else
-             echo "操作完成！"
-             exit 0
-        fi
+        uoskit restart
         ;;
     "software")
-        echo "请确认 sources.list 是否配置完成(yes/no)"
+        echo "请确认 开发源 是否配置完成？(yes/no)"
         read confirm_sources
         while [[ ! $confirm_sources =~ ^(yes|no|y|n)$ ]]; do
             echo "请输入正确的选项：yes 或 no (y/n)"
@@ -290,18 +282,22 @@ case "$operation" in
        echo "脚本版本号：$SCRIPT_VERSION"
 	;;
     "restart")
-       echo "1：注销 2：重启 "
-       read number_sources
-       while [[ ! $number_sources =~ ^(1|2)$ ]]; do
-           echo "请输入正确的选项：1 或者 2 "
-           read number_sources
-       done
+        echo "1:注销 2:重启 3:退出"
+        read user_response
 
-       if [[ "$number_sources" == 1 ]]; then
-           sudo systemctl restart lightdm.service
-       else
-           sudo reboot
-       fi
+        while [[ ! $user_response =~ ^(1|2|3)$ ]]; do
+             echo "请输入正确的选项：1 或 2 或 3"
+             read user_response
+        done
+
+        if [[ "$user_response" == 1 ]]; then
+             sudo systemctl restart lightdm.service
+        elif [[ "$user_response" == 2 ]]; then
+             sudo reboot
+        else
+             echo "操作完成！"
+             exit 0
+        fi
 	;;
     "install")
         sudo dpkg -i *.deb
@@ -314,20 +310,22 @@ case "$operation" in
     ;;
 	
    "activation")
-       echo "将进行kms激活，是否进行激活尝试?(yes/no)"
-       echo "请输入选项: "
-       read activation_method
-       while [[ ! $activation_method =~ ^(yes|y|no|n)$ ]]; do
-          echo "请输入正确的选项：yes 或 no (y/n)"
-          read activation_method
+       echo "将进行系统激活，请选择激活方式?(kms/https)"
+       read -p "请输入您的选择：" activation_method
+
+       while [[ ! $activation_method =~ ^(kms|k|https|h)$ ]]; do
+          echo "请输入正确的选项：kms 或 https (k/h)"
+          read -p "请输入您的选择：" activation_method
        done
-    
-       if [[ "$activation_method" =~ ^(yes|y)$ ]]; then
+
+       if [[ "$activation_method" =~ ^(k|kms)$ ]]; then
           uos-activator-cmd -s --kms kms.uniontech.com:8900:Vlc1cGIyNTBaV05v
           echo "已进行kms激活，请验证。"
        else
-          exit 0
+          uos-activator-cmd -s --https telicense.chinauos.com
+          echo "已进行https激活，请验证。"
        fi
+
        ;;
 
     "ssh")
