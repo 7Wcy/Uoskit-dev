@@ -3,7 +3,7 @@
 # 提取常量
 DEFAULT_EMAIL="wangchengyu@uniontech.com"
 DEFAULT_GITHUB_EMAIL="w2524180509@163.com"
-SSH_KEY_PATH="~/.ssh/id_rsa"
+SSH_KEY_PATH="$HOME/.ssh/id_rsa.pub"
 
 while true; do
     # 输出操作菜单
@@ -24,7 +24,7 @@ while true; do
         git config --global user.email "$DEFAULT_EMAIL"
         yes "" | ssh-keygen -t rsa -C "$DEFAULT_EMAIL"
         echo "已生成SSH密钥:"
-        cat ~/.ssh/id_rsa.pub
+        cat $SSH_KEY_PATH
         break
     elif [ "$choice" == "2" ]; then
         # 生成自定义SSH密钥
@@ -36,19 +36,22 @@ while true; do
 
         yes "" | ssh-keygen -t rsa -C "$email"
         echo "已生成自定义SSH密钥:"
-        cat ~/.ssh/id_rsa.pub
+       cat $SSH_KEY_PATH
         break
     elif [ "$choice" == "3" ]; then
         # 生成自定义GITHUB-SSH密钥
-        ssh-keygen -t rsa -b 4096 -f ~/.ssh/my_new_key -C "$DEFAULT_GITHUB_EMAIL"
-        cat ~/.ssh/my_new_key.pub
+        ssh-keygen -t rsa -b 4096 -C "w2524180509@163.com"
+        cat ~/.ssh/id_rsa.pub
+        pwd
+        echo ""
+        echo "正在测试连接情况..."
+        ssh -T git@github.com
+        
         break
     elif [ "$choice" == "4" ]; then
         # 删除SSH密钥
-        read -p "输入要删除的密钥文件的路径（默认为 $SSH_KEY_PATH）: " key_path
-        key_path=${key_path:-$SSH_KEY_PATH}
-        rm -f "$key_path" "$key_path.pub"
-        echo "已删除SSH密钥: $key_path"
+        sudo rm -rf ~/.ssh/
+        echo "已删除SSH密钥"
         break
     else
         echo "无效的选择，请重新输入。"
