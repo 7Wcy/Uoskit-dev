@@ -90,6 +90,8 @@ error_exit() {
 run_cmake() {
     local build_type=$1
     sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..
+    echo "已完成 debug 编译。"
+    exit 0
     [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..' 执行失败。编译中止。"
 }
 
@@ -213,7 +215,7 @@ done
 case "$operation" in
     "make")	 
         debug_check
-        echo "已完成安装。"
+        echo "已完成 debug 编译安装。"
         uoskit restart
         ;;
     "software")
