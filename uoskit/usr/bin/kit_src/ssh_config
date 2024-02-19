@@ -26,6 +26,7 @@ while true; do
         echo "已生成SSH密钥:"
         cat $SSH_KEY_PATH
         break
+
     elif [ "$choice" == "2" ]; then
         # 生成自定义SSH密钥
         read -p "输入用户名: " username
@@ -38,16 +39,13 @@ while true; do
         echo "已生成自定义SSH密钥:"
        cat $SSH_KEY_PATH
         break
+
     elif [ "$choice" == "3" ]; then
         # 生成自定义GITHUB-SSH密钥
         ssh-keygen -t rsa -b 4096 -C "w2524180509@163.com"
         cat ~/.ssh/id_rsa.pub
-        pwd
-        echo ""
-        echo "正在测试连接情况..."
-        ssh -T git@github.com
-        
         break
+
     elif [ "$choice" == "4" ]; then
         # 删除SSH密钥
         sudo rm -rf ~/.ssh/

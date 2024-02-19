@@ -90,8 +90,6 @@ error_exit() {
 run_cmake() {
     local build_type=$1
     sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..
-    echo "已完成 debug 编译。"
-    exit 0
     [ $? -ne 0 ] && error_exit "命令 'sudo cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=$build_type ..' 执行失败。编译中止。"
 }
 
@@ -109,11 +107,14 @@ debug_check() {
 
     if [ "$only_Run_cmake" = "true" ]; then
         run_cmake "Debug"
+        echo "已完成 debug 编译。"
     else
         run_cmake "Debug"
         sudo make install -j8
         [ $? -ne 0 ] && error_exit "命令 'sudo make install -j8' 执行失败。安装中止。"
+        echo "已完成 debug 编译并且安装。"
     fi
+    exit 0
 }
 
 # 安装软件函数
