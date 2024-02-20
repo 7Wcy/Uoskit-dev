@@ -38,7 +38,7 @@ git_url="ut${employee_id}@gerrit.uniontech.com"
 project_url="${git_url}:29418/${clone_Project_name}"
 
 # 克隆项目
-git clone "ssh://${project_url}" || error_exit "clone失败，请查看提示信息并判断密码、网络、git安装是否有问题，请修正后，重新运行。"
+git clone "ssh://${project_url}" || error_exit "clone失败，请查看提示信息并判断ssh、网络、git安装是否有问题，请修正后，重新运行。"
 
 # 如果是 xorg-server 项目，额外处理
 if [ "$clone_Project_name" == "base/xorg-server" ]; then
