@@ -19,37 +19,19 @@ INTERNET_CONNECT() {
     
     # 检查是否有网络连接
     if [ -n "$DEFAULT_GATEWAY" ]; then
-
-        # 定义有线网接口数组
-        wired_interfaces=("eno1" "eth0")
-        # 循环检查有线网接口
-        for interface in "${wired_interfaces[@]}"; do
-            if ip link show "$interface" >/dev/null 2>&1; then
-                # 获取有线网接口的 IP 地址
-                if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
-                    IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
-                    IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
-                    return
-                fi
-            fi
-        done
-
-        # 定义无线网接口数组
-        wireless_interfaces=("wlan0" "wlp1s0" "wlp1s1")
-        # 循环检查无线网接口
-        for interface in "${wireless_interfaces[@]}"; do
-            if ip link show "$interface" >/dev/null 2>&1; then
-                # 获取无线网接口的 IP 地址
-                if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
-                    IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
-                    IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
-                    return
-                fi
+        declare -a all_interfaces=($(ip link show | grep -E '^[0-9]+:' | awk -F: '{print $2}' | sed 's/^[[:space:]]*//'))
+        
+        for interface in "${all_interfaces[@]}"; do
+            # 获取接口的 IP 地址
+            if [[ -n $(ip addr show "$interface" | grep "state UP") ]]; then
+                IP_ADDRESS=$(ip addr show "$interface" | awk '/inet / {print $2}' | cut -d/ -f1)
+                IPNAME_ADDRESS="$IP_NAME@$IP_ADDRESS"
+                return
             fi
         done
     fi
 
-    IPNAME_ADDRESS="-- Not connected --"
+    IPNAME_ADDRESS="-- 未连接 --"
 }
 
 INTERNET_CONNECT  
